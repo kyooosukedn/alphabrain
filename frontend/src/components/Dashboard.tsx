@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,16 +13,24 @@ import {
   Calendar,
   ArrowRight,
   CheckCircle2,
-  Timer
+  Timer,
+  Zap,
+  Star,
+  TrendingUp,
+  Activity,
+  BookMarked,
+  GraduationCap
 } from "lucide-react";
 
-// Types remain the same
+// Enhanced types with more metadata
 interface StudyMetric {
   label: string;
   value: string | number;
   change?: string;
   icon: React.ComponentType<{ className?: string }>;
-  trend?: 'up' | 'down';
+  trend?: 'up' | 'down' | 'neutral';
+  color?: string;
+  description?: string;
 }
 
 interface StudySession {
@@ -32,45 +40,65 @@ interface StudySession {
   timeLeft: string;
   dueDate: string;
   lastStudied?: string;
-  color?: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  topics: string[];
+  color: string;
+  streakDays: number;
+  completedTopics: number;
+  totalTopics: number;
 }
 
-// Enhanced Metric Card with hover effects and animations
+// Enhanced Metric Card with gradient backgrounds and animations
 function MetricCard({ metric }: { metric: StudyMetric }) {
   const [isHovered, setIsHovered] = useState(false);
   const Icon = metric.icon;
   
   return (
     <Card
-      className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+      className={`group relative overflow-hidden transition-all duration-500 
+        ${isHovered ? 'shadow-xl scale-105' : 'shadow-md'}
+        bg-gradient-to-br from-background to-background/50
+        border border-primary/10 hover:border-primary/20`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
+        <CardTitle className="text-sm font-medium tracking-tight">
           {metric.label}
         </CardTitle>
-        <Icon className={`h-4 w-4 transition-transform duration-300 ${
+        <Icon className={`h-5 w-5 transition-all duration-500 ${
           isHovered ? 'scale-110 text-primary' : 'text-muted-foreground'
         }`} />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{metric.value}</div>
-        {metric.change && (
-          <p className={`text-xs flex items-center gap-1 ${
-            metric.trend === 'up' ? 'text-green-500' : 
-            metric.trend === 'down' ? 'text-red-500' : 
-            'text-muted-foreground'
-          }`}>
-            {metric.change}
-          </p>
-        )}
+        <div className="space-y-2">
+          <div className="text-2xl font-bold tracking-tight">{metric.value}</div>
+          {metric.change && (
+            <div className={`text-xs flex items-center gap-1 transition-colors duration-300 ${
+              metric.trend === 'up' ? 'text-green-500' : 
+              metric.trend === 'down' ? 'text-red-500' : 
+              'text-muted-foreground'
+            }`}>
+              <TrendingUp className={`h-3 w-3 ${
+                metric.trend === 'up' ? 'rotate-0' : 
+                metric.trend === 'down' ? 'rotate-180' : ''
+              }`} />
+              {metric.change}
+            </div>
+          )}
+          {metric.description && (
+            <p className="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              {metric.description}
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-// Enhanced Study Session Card with interactive elements
+// Enhanced Study Session Card with rich interactions and visual feedback
 function StudySessionCard({ 
   session, 
   onContinue 
@@ -79,78 +107,111 @@ function StudySessionCard({
   onContinue: (sessionId: string) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(session.timeLeft);
+  const [progress, setProgress] = useState(session.progress);
 
-  // Simulated countdown timer
+  // Animate progress on hover
   useEffect(() => {
-    const timer = setInterval(() => {
-      // Update time remaining (simplified for demo)
-      setTimeRemaining(prev => 
-        prev.includes('h') ? 
-        `${parseInt(prev) - 1}h left` : 
-        prev
-      );
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, []);
+    if (isHovered) {
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          const newValue = prev + 0.1;
+          return newValue > session.progress ? session.progress : newValue;
+        });
+      }, 10);
+      return () => clearInterval(interval);
+    } else {
+      setProgress(session.progress);
+    }
+  }, [isHovered, session.progress]);
 
   return (
     <Card
-      className={`transition-all duration-300 ${
-        isHovered ? 'shadow-lg ring-2 ring-primary ring-opacity-50' : ''
-      }`}
+      className={`group relative overflow-hidden transition-all duration-500
+        ${isHovered ? 'shadow-xl scale-105' : 'shadow-md'}
+        bg-gradient-to-br from-background to-background/50`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${
-              session.color || 'bg-primary'
-            }`} />
-            <span>{session.subject}</span>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              {session.subject}
+            </CardTitle>
+            <CardDescription>
+              {session.completedTopics} of {session.totalTopics} topics completed
+            </CardDescription>
           </div>
           <Button 
             variant={isHovered ? "default" : "outline"}
             size="sm" 
             onClick={() => onContinue(session.id)}
-            className="transition-all duration-300"
+            className="transition-all duration-300 group/button"
           >
-            Continue {isHovered && <ArrowRight className="ml-2 h-4 w-4" />}
+            Continue
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover/button:translate-x-1" />
           </Button>
-        </CardTitle>
+        </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between mb-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Progress</span>
             <span className="text-sm text-muted-foreground">
-              {session.progress}%
+              {Math.round(progress)}%
             </span>
           </div>
-          <Progress 
-            value={session.progress} 
-            className="h-2 transition-all duration-500"
-          />
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-1">
-            <Timer className="h-4 w-4 text-orange-500" />
-            <span className={`${
-              timeRemaining.includes('1h') ? 'text-orange-500 font-medium' : ''
-            }`}>
-              {timeRemaining}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="h-4 w-4 text-blue-500" />
-            <span>{session.dueDate}</span>
+          <div className="relative">
+            <Progress 
+              value={progress} 
+              className="h-2 transition-all duration-500"
+            />
+            {isHovered && (
+              <div className="absolute -right-2 -top-1 transition-opacity duration-300">
+                <Star className="h-4 w-4 text-primary animate-pulse" />
+              </div>
+            )}
           </div>
         </div>
-        {session.lastStudied && (
-          <div className="text-xs text-muted-foreground">
-            Last studied: {session.lastStudied}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Timer className="h-4 w-4 text-primary" />
+              <span>{session.timeLeft}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span>{session.dueDate}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Activity className="h-4 w-4 text-primary" />
+              <span>{session.difficulty} difficulty</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Zap className="h-4 w-4 text-primary" />
+              <span>{session.streakDays} day streak</span>
+            </div>
+          </div>
+        </div>
+
+        {session.topics.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {session.topics.map((topic, index) => (
+              <span
+                key={index}
+                className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary transition-all duration-300 hover:bg-primary/20"
+              >
+                {topic}
+              </span>
+            ))}
           </div>
         )}
       </CardContent>
@@ -158,55 +219,74 @@ function StudySessionCard({
   );
 }
 
-// Enhanced constants with more metadata
+// Rich mock data
 const STUDY_METRICS: StudyMetric[] = [
   {
     label: "Study Streak",
     value: "7 days",
     change: "+2 days from last week",
     icon: Trophy,
-    trend: 'up'
+    trend: 'up',
+    color: 'yellow-500',
+    description: 'Keep going! Your longest streak was 12 days.'
   },
-  {
-    label: "Study Time",
+{
+    label: "Focus Time",
     value: "12.5 hours",
-    change: "This week",
+    change: "30% increase",
     icon: Clock,
-    trend: 'up'
-  },
+    trend: 'up',
+    color: 'blue-500',
+    description: 'You\'re studying more efficiently than last week!'
+},
   {
-    label: "Topics Mastered",
-    value: 24,
+    label: "Mastery Score",
+    value: "24/30",
     change: "+3 this week",
     icon: Brain,
-    trend: 'up'
+    trend: 'up',
+    color: 'purple-500',
+    description: 'Exceptional progress in difficult topics'
   },
   {
-    label: "Next Goal",
+    label: "Next Milestone",
     value: "3 days",
-    change: "Until completion",
-    icon: Target
+    change: "On track",
+    icon: Target,
+    trend: 'neutral',
+    color: 'green-500',
+    description: 'Complete 5 more topics to unlock achievements'
   }
 ];
 
 const MOCK_SESSIONS: StudySession[] = [
   {
     id: "1",
-    subject: "Mathematics",
+    subject: "Advanced Mathematics",
     progress: 67,
     timeLeft: "2h left",
     dueDate: "Due tomorrow",
     lastStudied: "Today, 2 hours ago",
-    color: "bg-blue-500"
+    difficulty: 'hard',
+    topics: ['Calculus', 'Linear Algebra', 'Statistics'],
+    color: 'blue-500',
+    streakDays: 5,
+    completedTopics: 8,
+    totalTopics: 12
   },
   {
     id: "2",
-    subject: "Physics",
+    subject: "Quantum Physics",
     progress: 45,
     timeLeft: "4h left",
     dueDate: "Due in 3 days",
     lastStudied: "Yesterday",
-    color: "bg-purple-500"
+    difficulty: 'medium',
+    topics: ['Quantum Mechanics', 'Wave Theory'],
+    color: 'purple-500',
+    streakDays: 3,
+    completedTopics: 4,
+    totalTopics: 8
   }
 ];
 
@@ -225,19 +305,27 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Welcome Alert */}
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95 p-8 space-y-8">
+      {/* Enhanced Welcome Alert */}
       {showAlert && (
-        <Alert className="bg-primary/5 border-primary/20">
+        <Alert className="bg-primary/5 border-primary/20 animate-fadeIn">
           <AlertDescription className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              Welcome back! You're on track to reach your weekly study goal.
-            </span>
+            <div className="flex items-center gap-4">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">Excellent progress!</p>
+                <p className="text-sm text-muted-foreground">
+                  You're on track to reach your weekly study goal.
+                </p>
+              </div>
+            </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setShowAlert(false)}
+              className="hover:bg-primary/10"
             >
               Dismiss
             </Button>
@@ -247,26 +335,30 @@ export default function Dashboard() {
 
       {/* Enhanced Header Section */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
-            Welcome back, Student!
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
+              Welcome back, Student!
+            </span>
           </h1>
-          <p className="text-muted-foreground">
-            Let's continue your learning journey.
+          <p className="text-lg text-muted-foreground">
+            Ready to continue your learning journey?
           </p>
         </div>
         <Button 
           size="lg" 
-          className="gap-2 transition-all duration-300 hover:gap-3"
+          className="group relative overflow-hidden"
           onClick={handleStartStudying}
         >
-          <BookOpen className="w-4 h-4" /> 
-          Start Studying
-          <ArrowRight className="w-4 h-4" />
+          <span className="relative flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            Start Studying
+            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </span>
         </Button>
       </div>
 
-      {/* Metrics Overview */}
+      {/* Enhanced Metrics Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {STUDY_METRICS.map((metric, index) => (
           <MetricCard key={index} metric={metric} />
@@ -277,16 +369,25 @@ export default function Dashboard() {
       <Tabs 
         value={selectedTab} 
         onValueChange={setSelectedTab}
-        className="space-y-4"
+        className="space-y-6"
       >
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="current" className="flex-1 md:flex-none">
+        <TabsList className="w-full justify-start bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/50 border">
+          <TabsTrigger 
+            value="current"
+            className="flex-1 md:flex-none data-[state=active]:bg-primary/10"
+          >
             Current Studies
           </TabsTrigger>
-          <TabsTrigger value="upcoming" className="flex-1 md:flex-none">
+          <TabsTrigger 
+            value="upcoming"
+            className="flex-1 md:flex-none data-[state=active]:bg-primary/10"
+          >
             Upcoming
           </TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1 md:flex-none">
+          <TabsTrigger 
+            value="completed"
+            className="flex-1 md:flex-none data-[state=active]:bg-primary/10"
+          >
             Completed
           </TabsTrigger>
         </TabsList>
@@ -309,7 +410,10 @@ export default function Dashboard() {
               <CardTitle>Upcoming Studies</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>You have 3 upcoming study sessions scheduled.</p>
+              <div className="flex items-center gap-2">
+                <BookMarked className="h-5 w-5 text-primary" />
+                <p>You have 3 upcoming study sessions scheduled.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -320,11 +424,14 @@ export default function Dashboard() {
               <CardTitle>Completed Studies</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>You've completed 12 study sessions this week!</p>
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                <p>You've completed 12 study sessions this week!</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-}   
+}
