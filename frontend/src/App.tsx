@@ -1,10 +1,13 @@
 import React from "react";
-import Dashboard from "./components/Dashboard";
+import { BrowserRouter as Router } from "react-router-dom";
+import Navigation from "./components/Navigation";
 
 function App() {
   return (
     <div className="container mx-auto p-4">
-      <Dashboard />
+      <Router>
+        <Navigation />        
+      </Router>
     </div>
   );
 }
