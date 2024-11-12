@@ -40,3 +40,34 @@
 .read-the-docs {
   color: #888;
 }
+
+.study-calendar {
+  --fc-border-color: rgba(255, 255, 255, 0.1);
+  --fc-button-bg-color: rgba(255, 255, 255, 0.1);
+  --fc-button-border-color: rgba(255, 255, 255, 0.1);
+  --fc-button-hover-bg-color: rgba(255, 255, 255, 0.2);
+  --fc-button-hover-border-color: rgba(255, 255, 255, 0.2);
+  --fc-button-active-bg-color: rgba(139, 92, 246, 0.5);
+  --fc-button-active-border-color: rgba(139, 92, 246, 0.5);
+  --fc-event-bg-color: #8b5cf6;
+  --fc-event-border-color: #8b5cf6;
+  --fc-today-bg-color: rgba(139, 92, 246, 0.1);
+}
+
+.study-calendar .fc-theme-standard td, 
+.study-calendar .fc-theme-standard th {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.study-calendar .fc-timegrid-slot,
+.study-calendar .fc-timegrid-axis {
+  height: 50px !important;
+}
+
+.study-calendar .fc-button {
+  @apply text-white;
+}
+
+.study-calendar .fc-event {
+  @apply cursor-pointer transition-opacity hover:opacity-80;
+}

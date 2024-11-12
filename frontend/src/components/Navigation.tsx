@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import ProgressPage from './progress/ProgressPage';
+import Schedule from './Schedule';
 
 // Define types
 interface NavItem {
@@ -295,7 +296,8 @@ const Navigation: React.FC = () => {
         </div>
         <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/progress" element={<ProgressPage />} />
+            <Route path="/progress" element={<ProgressPage />} /> 
+            <Route path="/schedule" element={<Schedule />}></Route>
         </Routes>
       </div>
     </motion.div>
