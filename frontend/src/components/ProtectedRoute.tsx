@@ -1,32 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Checking auth state
-  const navigate = useNavigate();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireAuth?: boolean;
+}
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    console.log("Checking token...");
-    if (token) {
-      console.log("Token found: User is logged in.");
-      setIsCheckingAuth(false); // Stop checking once authenticated
-    } else {
-      console.log("No token found: Redirecting to /login...");
-      navigate("/login", { replace: true }); // Redirect if not authenticated
-    }
-  }, [navigate]);
+// Temporarily bypass authentication
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children,
+  requireAuth = true 
+}) => {
+  // For development, always render children
+  return <>{children}</>;
 
-  if (isCheckingAuth) {
-    console.log("Loading authentication check...");
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p> {/* Loading screen during auth check */}
-      </div>
-    );
+  // TODO: Uncomment this when implementing authentication
+  /*
+  const isAuthenticated = localStorage.getItem('token') !== null;
+
+  if (requireAuth && !isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  return <>hello{children}</>; // Render the protected route once auth is verified
+  if (!requireAuth && isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+  */
 };
 
 export default ProtectedRoute;

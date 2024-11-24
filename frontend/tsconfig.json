@@ -9,6 +9,7 @@
     }
   ],
   "compilerOptions": {
+    "types": ["react", "node"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
