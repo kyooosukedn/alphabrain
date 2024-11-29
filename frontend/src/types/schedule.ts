@@ -1,16 +1,16 @@
 import { ElementType } from 'react';
 
-export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+export type EventType = 'Deep Work' | 'Customer Interview' | 'Book Review' | 'TD Monthly Newsletter' | 'Record Video';
 
 export interface StudyEvent {
   id: string;
   title: string;
   start: Date;
   end: Date;
-  subject: string;
-  difficulty: Difficulty;
-  color?: string;
-  topic?: string;
+  type?: EventType;
+  description?: string;
+  backgroundColor?: string;
+  borderColor?: string;
 }
 
 export interface ScheduleStat {
@@ -20,18 +20,10 @@ export interface ScheduleStat {
   color: string;
 }
 
-export interface SessionFormData {
-  subject: string;
-  topic: string;
-  date: string;
-  duration: string;
-  difficulty: Difficulty;
-}
-
-export const subjectColors: Record<string, string> = {
-  Mathematics: '#8b5cf6',
-  Physics: '#3b82f6',
-  Chemistry: '#10b981',
-  Biology: '#f59e0b',
-  Literature: '#ec4899'
+export const eventTypeColors: Record<EventType, string> = {
+  'Deep Work': '#8b5cf6',
+  'Customer Interview': '#3b82f6',
+  'Book Review': '#10b981',
+  'TD Monthly Newsletter': '#f59e0b',
+  'Record Video': '#ec4899'
 };

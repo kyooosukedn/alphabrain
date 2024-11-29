@@ -1,10 +1,11 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
 import type { ApiResponse, LoginCredentials, RegisterCredentials, User, Session, Progress } from '../types';
+import { mockApi } from './mockApi';
 
 // Create axios instance with default config
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,6 +35,26 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    console.error('API Error:', error);
+    // Use mock data if API fails
+    if (error.config?.url) {
+      const path = error.config.url.split('/').filter(Boolean);
+      const method = error.config.method;
+      
+      // Try to use mock data
+      if (path[0] === 'auth' && path[1] === 'login' && method === 'post') {
+        return mockApi.auth.login(JSON.parse(error.config.data));
+      }
+      if (path[0] === 'sessions') {
+        if (method === 'post') return mockApi.sessions.createSession(JSON.parse(error.config.data));
+        if (method === 'get') return mockApi.sessions.getSessions();
+      }
+      if (path[0] === 'progress') {
+        if (method === 'post') return mockApi.progress.addProgress(JSON.parse(error.config.data));
+        if (method === 'get') return mockApi.progress.getProgress();
+      }
+    }
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';

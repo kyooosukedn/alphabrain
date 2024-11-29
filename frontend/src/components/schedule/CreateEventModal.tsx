@@ -4,25 +4,19 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "../../components/ui/dialog";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import type { StudyEvent } from "@/types/schedule";
-
-interface CreateSessionFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (event: StudyEvent) => void;
-  selectedDate: Date | null;
-}
+} from "../../components/ui/select";
+import { Textarea } from "../../components/ui/textarea";
+import { format } from "date-fns";
+import React from "react";
 
 const eventTypes = {
   'Deep Work': '#8b5cf6',
@@ -43,27 +37,32 @@ interface FormData {
   endTime: string;
 }
 
-export function CreateSessionForm({
+interface CreateEventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (event: any) => void;
+  selectedDate: Date | null;
+}
+
+export function CreateEventModal({
   isOpen,
   onClose,
   onSubmit,
   selectedDate,
-}: CreateSessionFormProps) {
+}: CreateEventModalProps) {
   const defaultStartTime = selectedDate 
-    ? new Date(selectedDate.setMinutes(Math.ceil(selectedDate.getMinutes() / 30) * 30))
-        .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    ? format(selectedDate, 'HH:mm')
     : '09:00';
   
   const defaultEndTime = selectedDate
-    ? new Date(selectedDate.setHours(selectedDate.getHours() + 1))
-        .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    ? format(new Date(selectedDate.getTime() + 60 * 60 * 1000), 'HH:mm')
     : '10:00';
 
   const [formData, setFormData] = useState<FormData>({
     type: '',
     title: '',
     description: '',
-    date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+    date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
     startTime: defaultStartTime,
     endTime: defaultEndTime,
   });
@@ -78,8 +77,8 @@ export function CreateSessionForm({
     const startDateTime = new Date(`${formData.date}T${formData.startTime}`);
     const endDateTime = new Date(`${formData.date}T${formData.endTime}`);
 
-    const newEvent: StudyEvent = {
-      id: Math.random().toString(36).substr(2, 9),
+    const newEvent = {
+      id: Math.random().toString(36).substring(2, 9),
       title: formData.title,
       start: startDateTime,
       end: endDateTime,
@@ -105,12 +104,12 @@ export function CreateSessionForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Event</DialogTitle>
+          <DialogTitle>New Activity/Subject</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="type" className="text-sm font-medium">
-              Event Type
+              Activity Type
             </label>
             <Select
               value={formData.type}
@@ -205,7 +204,7 @@ export function CreateSessionForm({
             <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Create Event</Button>
+            <Button type="submit">Create Block</Button>
           </div>
         </form>
       </DialogContent>

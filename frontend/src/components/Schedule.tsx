@@ -1,46 +1,93 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
 import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScheduleStats } from './schedule/ScheduleStats';
-import { CreateSessionForm } from './schedule/CreateSessionForm';
-import type { StudyEvent } from '@/types/schedule';
+import { Button } from '../components/ui/button';
+import { cn } from '../lib/utils';
+import { format } from 'date-fns';
+import React from 'react';
+import { CreateEventModal } from './schedule/CreateEventModal';
 
-// Import FullCalendar styles
-import '../styles/fullcalendar.css';
+// Event types and their colors
+const eventTypes = {
+  'Deep Work': '#8b5cf6',
+  'Customer Interview': '#3b82f6',
+  'Book Review': '#10b981',
+  'TD Monthly Newsletter': '#f59e0b',
+  'Record Video': '#ec4899'
+} as const;
 
-// Subject colors for different study subjects
-const subjectColors = {
-  Mathematics: '#8b5cf6',
-  Physics: '#3b82f6',
-  Chemistry: '#10b981',
-  Biology: '#f59e0b',
-  Literature: '#ec4899'
-};
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  backgroundColor?: string;
+  borderColor?: string;
+  type?: keyof typeof eventTypes;
+  description?: string;
+}
+
+interface CreateEventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (event: CalendarEvent) => void;
+  selectedDate: Date | null;
+}
 
 export default function Schedule() {
-  // State for managing study events and modal
-  const [events, setEvents] = useState<StudyEvent[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([
+    {
+      id: '1',
+      title: 'Deep work',
+      start: new Date('2024-11-29T09:00:00'),
+      end: new Date('2024-11-29T10:30:00'),
+      backgroundColor: eventTypes['Deep Work'],
+      borderColor: eventTypes['Deep Work'],
+      type: 'Deep Work'
+    },
+    {
+      id: '2',
+      title: 'Customer interviews',
+      start: new Date('2024-11-29T11:00:00'),
+      end: new Date('2024-11-29T15:00:00'),
+      backgroundColor: eventTypes['Customer Interview'],
+      borderColor: eventTypes['Customer Interview'],
+      type: 'Customer Interview'
+    },
+    {
+      id: '3',
+      title: 'TD Monthly Newsletter',
+      start: new Date('2024-11-29T13:00:00'),
+      end: new Date('2024-11-29T14:00:00'),
+      backgroundColor: eventTypes['TD Monthly Newsletter'],
+      borderColor: eventTypes['TD Monthly Newsletter'],
+      type: 'TD Monthly Newsletter'
+    }
+  ]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Handle calendar date selection
-  const handleDateSelect = (selectInfo: any) => {
+  const handleDateSelect = useCallback((selectInfo: any) => {
+    const calendarApi = selectInfo.view.calendar;
+    calendarApi.unselect(); // clear date selection
+
     const startDate = new Date(selectInfo.start);
     setSelectedDate(startDate);
     setIsCreateModalOpen(true);
-  };
+  }, []);
 
-  // Add new study event
-  const handleEventAdd = (event: StudyEvent) => {
-    if (!event.start || !event.end) {
-      return;
-    }
-    setEvents(prevEvents => [...prevEvents, event]);
-  };
+  const handleEventAdd = useCallback((event: CalendarEvent) => {
+    setEvents(prev => [...prev, event]);
+  }, []);
+
+  const handleEventClick = useCallback((clickInfo: any) => {
+    // You can implement event viewing/editing here
+    console.log('Event clicked:', clickInfo.event);
+  }, []);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -53,18 +100,18 @@ export default function Schedule() {
         </Button>
       </div>
 
-      {/* Statistics display */}
-      <ScheduleStats events={events} />
-
       {/* Calendar */}
-      <div className="rounded-lg border bg-card text-foreground">
+      <div className={cn(
+        "rounded-lg border bg-card text-card-foreground shadow-sm",
+        "fc fc-media-screen fc-direction-ltr fc-theme-standard"
+      )}>
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
           }}
           editable={true}
           selectable={true}
@@ -73,15 +120,35 @@ export default function Schedule() {
           weekends={true}
           events={events}
           select={handleDateSelect}
+          eventClick={handleEventClick}
           height="auto"
           aspectRatio={2}
           slotMinTime="06:00:00"
           slotMaxTime="22:00:00"
+          nowIndicator={true}
+          businessHours={{
+            daysOfWeek: [1, 2, 3, 4, 5],
+            startTime: '09:00',
+            endTime: '17:00',
+          }}
+          slotDuration="00:30:00"
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false
+          }}
+          allDaySlot={false}
+          slotLabelFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }}
         />
       </div>
 
-      {/* Create session modal */}
-      <CreateSessionForm
+      {/* Create event modal */}
+      <CreateEventModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleEventAdd}

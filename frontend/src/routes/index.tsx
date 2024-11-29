@@ -6,6 +6,7 @@ import Schedule from '../components/Schedule';
 import Login from '../components/auth/Login';
 import Signup from '../components/auth/Signup';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { ReduxStateDebugger } from '../components/debug/ReduxStateDebugger';
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,9 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Debug Route */}
+      <Route path="/debug" element={<ReduxStateDebugger />} />
 
       {/* Protected Routes */}
       <Route

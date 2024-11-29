@@ -15,14 +15,31 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['persist/PERSIST'],
+        ignoredActions: [
+          'persist/PERSIST',
+          'sessions/createSession/pending',
+          'sessions/createSession/fulfilled',
+          'sessions/createSession/rejected',
+          'progress/addProgress/pending',
+          'progress/addProgress/fulfilled',
+          'progress/addProgress/rejected'
+        ],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ['payload.startTime', 'payload.endTime', 'payload.timestamp'],
+        ignoredActionPaths: [
+          'meta.arg.startTime',
+          'meta.arg.endTime',
+          'meta.arg.timestamp',
+          'payload.startTime',
+          'payload.endTime',
+          'payload.timestamp'
+        ],
         // Ignore these paths in the state
         ignoredPaths: [
           'sessions.sessions.startTime',
           'sessions.sessions.endTime',
           'progress.metrics.timestamp',
+          'sessions.currentSession.startTime',
+          'sessions.currentSession.endTime'
         ],
       },
     }),
