@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Timer, Play, Pause, RotateCcw, Trophy, 
-  Target, Brain, Zap, ChevronRight, BarChart
+  Target, Brain, Zap, ChevronRight, BarChart,
+  ArrowLeft, Loader
 } from 'lucide-react';
 import {
   LineChart,
@@ -13,23 +15,96 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { useSessions } from '@/hooks/useSessions';
+import { useToast } from '@/hooks/use-toast';
+import { Session } from '@/types/session';
 
 const ProgressPage = () => {
   const [activeTimer, setActiveTimer] = useState<'pomodoro' | 'break'>('pomodoro');
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState('weekly');
-
-  // Mock data - replace with real data
-  const studyData = [
-    { day: 'Mon', hours: 2.5, focus: 85, topics: 3 },
-    { day: 'Tue', hours: 3.0, focus: 90, topics: 4 },
-    { day: 'Wed', hours: 2.0, focus: 75, topics: 2 },
-    { day: 'Thu', hours: 4.0, focus: 95, topics: 5 },
-    { day: 'Fri', hours: 3.5, focus: 88, topics: 4 },
-    { day: 'Sat', hours: 1.5, focus: 70, topics: 2 },
-    { day: 'Sun', hours: 2.8, focus: 85, topics: 3 },
-  ];
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Get session ID from URL query params
+  const queryParams = new URLSearchParams(location.search);
+  const sessionId = queryParams.get('session');
+  
+  // Use the sessions hook to access Redux state and actions
+  const { 
+    sessions, 
+    currentSession,
+    loading, 
+    error,
+    handleSetCurrentSession,
+    handleUpdateSession
+  } = useSessions();
+  
+  // Set current session based on URL parameter
+  useEffect(() => {
+    if (sessionId && sessions.length > 0) {
+      const session = sessions.find(s => s.id === sessionId);
+      if (session) {
+        handleSetCurrentSession(session);
+        // If session is PLANNED, update to IN_PROGRESS
+        if (session.status === 'PLANNED') {
+          handleUpdateSession(session.id, { status: 'IN_PROGRESS' })
+            .catch(error => {
+              toast({
+                title: "Error",
+                description: "Failed to update session status.",
+                variant: "destructive"
+              });
+            });
+        }
+      } else {
+        toast({
+          title: "Session not found",
+          description: "The requested study session could not be found.",
+          variant: "destructive"
+        });
+        navigate('/');
+      }
+    }
+  }, [sessionId, sessions, handleSetCurrentSession, handleUpdateSession, navigate, toast]);
+  
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      // Timer finished
+      if (activeTimer === 'pomodoro') {
+        setActiveTimer('break');
+        setTimeLeft(5 * 60); // 5 minute break
+        
+        // Update session progress if we have a current session
+        if (currentSession) {
+          handleUpdateSession(currentSession.id, { 
+            status: 'IN_PROGRESS' 
+          }).catch(error => {
+            toast({
+              title: "Error",
+              description: "Failed to update session progress.",
+              variant: "destructive"
+            });
+          });
+        }
+      } else {
+        setActiveTimer('pomodoro');
+        setTimeLeft(25 * 60); // Back to 25 minute focus
+      }
+    }
+    
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft, activeTimer, currentSession, handleUpdateSession, toast]);
 
   return (
     <div className="space-y-8">
@@ -206,7 +281,7 @@ const ProgressPage = () => {
 
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={studyData}>
+            <LineChart data={[]}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
               <XAxis 
                 dataKey="day" 

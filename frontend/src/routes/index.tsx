@@ -1,12 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from '../components/layout/navigation/Navigation';
 import Dashboard from '../components/Dashboard';
-import ProgressPage from '../components/progress/ProgressPage';
-import Schedule from '../components/Schedule';
+import LearningJourney from '../components/learning-journey/LearningJourney';
 import Login from '../components/auth/Login';
 import Signup from '../components/auth/Signup';
 import ProtectedRoute from '../components/ProtectedRoute';
-import { ReduxStateDebugger } from '../components/debug/ReduxStateDebugger';
+import { TopicManager } from '../components/topics/TopicManager';
 
 export default function AppRoutes() {
   return (
@@ -29,9 +28,6 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Debug Route */}
-      <Route path="/debug" element={<ReduxStateDebugger />} />
-
       {/* Protected Routes */}
       <Route
         path="/"
@@ -42,8 +38,8 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="progress" element={<ProgressPage />} />
-        <Route path="schedule" element={<Schedule />} />
+        <Route path="learning-journey" element={<LearningJourney />} />
+        <Route path="topics" element={<TopicManager />} />
       </Route>
 
       {/* Catch all route */}

@@ -1,6 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { sessionsApi } from '../../services/api';
-import type { Session, SessionsState } from '../../types';
+import type { Session } from '../../types/session';
+
+export interface SessionsState {
+  sessions: Session[];
+  currentSession: Session | null;
+  loading: boolean;
+  error: string | null;
+}
 
 const initialState: SessionsState = {
   sessions: [],
@@ -15,8 +22,8 @@ export const fetchSessions = createAsyncThunk(
     try {
       const response = await sessionsApi.getSessions();
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch sessions');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch sessions');
     }
   }
 );
@@ -27,8 +34,8 @@ export const createSession = createAsyncThunk(
     try {
       const response = await sessionsApi.createSession(session);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create session');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to create session');
     }
   }
 );
@@ -39,8 +46,8 @@ export const updateSession = createAsyncThunk(
     try {
       const response = await sessionsApi.updateSession(id, session);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update session');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to update session');
     }
   }
 );
@@ -51,8 +58,8 @@ export const deleteSession = createAsyncThunk(
     try {
       await sessionsApi.deleteSession(id);
       return id;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete session');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete session');
     }
   }
 );

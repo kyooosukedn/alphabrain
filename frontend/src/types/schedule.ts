@@ -11,6 +11,8 @@ export interface StudyEvent {
   description?: string;
   backgroundColor?: string;
   borderColor?: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH';
+  topicId?: string;  // Reference to the topic
 }
 
 export interface ScheduleStat {
@@ -27,3 +29,15 @@ export const eventTypeColors: Record<EventType, string> = {
   'TD Monthly Newsletter': '#f59e0b',
   'Record Video': '#ec4899'
 };
+
+export interface SessionFormData {
+  id?: string;
+  title: string;
+  description?: string;
+  start: Date;
+  end: Date;
+  type?: string;
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH';
+  topicId?: string | null;
+  category?: string;
+}

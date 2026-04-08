@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authApi } from '../../services/api';
-import type { AuthState, LoginCredentials, RegisterCredentials, User } from '../../types';
+import type { AuthState, LoginCredentials, RegisterCredentials, User, AuthResponse } from '../../types';
+import axios from 'axios';
 
 const initialState: AuthState = {
   user: null,
@@ -9,28 +10,70 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<User, LoginCredentials>(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
-      localStorage.setItem('token', response.data.token);
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      
+      // Handle response format from our backend API
+      if (response.data && response.data.access_token) {
+        const authResponse = response.data as AuthResponse;
+        // Store the JWT token
+        localStorage.setItem('token', authResponse.access_token);
+        
+        // Extract user data from token or from response
+        const userData: User = {
+          id: authResponse.userId || 'unknown',
+          username: authResponse.username || credentials.username,
+          email: credentials.username, // Use username as email if not provided
+        };
+        
+        return userData;
+      } else {
+        return rejectWithValue('Invalid response format from server');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      // Extract the error message from the response
+      if (axios.isAxiosError(error) && error.response) {
+        return rejectWithValue(error.response.data?.message || 'Login failed');
+      }
+      return rejectWithValue('Network error or server unavailable');
     }
   }
 );
 
-export const register = createAsyncThunk(
+export const register = createAsyncThunk<User, RegisterCredentials>(
   'auth/register',
   async (credentials: RegisterCredentials, { rejectWithValue }) => {
     try {
       const response = await authApi.register(credentials);
-      localStorage.setItem('token', response.data.token);
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      
+      // Handle response format from our backend API
+      if (response.data && response.data.access_token) {
+        const authResponse = response.data as AuthResponse;
+        // Store the JWT token
+        localStorage.setItem('token', authResponse.access_token);
+        
+        // Extract user data from token or from response
+        const userData: User = {
+          id: authResponse.userId || 'unknown',
+          username: authResponse.username || credentials.username,
+          email: credentials.email,
+        };
+        
+        return userData;
+      } else {
+        return rejectWithValue('Invalid response format from server');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      // Extract the error message from the response
+      if (axios.isAxiosError(error) && error.response) {
+        return rejectWithValue(error.response.data?.message || 'Registration failed');
+      }
+      return rejectWithValue('Network error or server unavailable');
     }
   }
 );
@@ -43,7 +86,12 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;
-      authApi.logout();
+      localStorage.removeItem('token');
+      try {
+        authApi.logout();
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -64,6 +112,7 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.isAuthenticated = false;
       })
       // Register
       .addCase(register.pending, (state) => {
@@ -78,6 +127,7 @@ const authSlice = createSlice({
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.isAuthenticated = false;
       });
   },
 });

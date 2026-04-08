@@ -1,121 +1,189 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
+import { Topic, CreateTopicRequest } from '../types/topic';
+import axiosInstance from '../config/axiosConfig';
+import type { Session, CreateSessionRequest } from '../types/session';
 import { QueryClient } from '@tanstack/react-query';
-import type { ApiResponse, LoginCredentials, RegisterCredentials, User, Session, Progress } from '../types';
-import { mockApi } from './mockApi';
+import type { Progress, LoginCredentials, RegisterCredentials } from '../types';
 
-// Create axios instance with default config
-export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Create React Query client
+// Create and export the QueryClient instance
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
 });
 
-// Axios interceptor for authentication
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Helper function to handle API errors
+const handleApiError = (error: any, operation: string) => {
+  console.error(`API Error during ${operation}:`, error);
+  
+  if (error.response) {
+    console.error(`Status: ${error.response.status}, Data:`, error.response.data);
+  } else if (error.request) {
+    console.error('No response received from server:', error.request);
+  } else {
+    console.error('Error message:', error.message);
   }
-  return config;
-});
-
-// Error handling interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
-    console.error('API Error:', error);
-    // Use mock data if API fails
-    if (error.config?.url) {
-      const path = error.config.url.split('/').filter(Boolean);
-      const method = error.config.method;
-      
-      // Try to use mock data
-      if (path[0] === 'auth' && path[1] === 'login' && method === 'post') {
-        return mockApi.auth.login(JSON.parse(error.config.data));
-      }
-      if (path[0] === 'sessions') {
-        if (method === 'post') return mockApi.sessions.createSession(JSON.parse(error.config.data));
-        if (method === 'get') return mockApi.sessions.getSessions();
-      }
-      if (path[0] === 'progress') {
-        if (method === 'post') return mockApi.progress.addProgress(JSON.parse(error.config.data));
-        if (method === 'get') return mockApi.progress.getProgress();
-      }
-    }
-
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-// Auth API
-export const authApi = {
-  login: async (credentials: LoginCredentials): Promise<ApiResponse<{ token: string; user: User }>> => {
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/auth/login', credentials);
-    return response.data;
-  },
-
-  register: async (credentials: RegisterCredentials): Promise<ApiResponse<{ token: string; user: User }>> => {
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/auth/register', credentials);
-    return response.data;
-  },
-
-  logout: () => {
-    localStorage.removeItem('token');
-    queryClient.clear();
-  },
+  
+  throw error;
 };
 
-// Sessions API
+export const topicsApi = {
+  getTopics: () => axiosInstance.get<Topic[]>('/api/subjects'),
+  getTopicById: (id: string) => axiosInstance.get<Topic>(`/api/subjects/${id}`),
+  createTopic: (topic: CreateTopicRequest) => 
+    axiosInstance.post<Topic>('/api/subjects', topic),
+  updateTopic: (id: string, topic: Partial<CreateTopicRequest>) => 
+    axiosInstance.put<Topic>(`/api/subjects/${id}`, topic),
+  deleteTopic: (id: string) => 
+    axiosInstance.delete(`/api/subjects/${id}`)
+};
+
 export const sessionsApi = {
-  getSessions: async (): Promise<ApiResponse<Session[]>> => {
-    const response = await api.get<ApiResponse<Session[]>>('/sessions');
-    return response.data;
+  getSessions: async () => {
+    try {
+      return await axiosInstance.get<Session[]>('/api/sessions');
+    } catch (error) {
+      return handleApiError(error, 'getSessions');
+    }
+  },
+  
+  getSessionById: async (id: string) => {
+    try {
+      return await axiosInstance.get<Session>(`/api/sessions/${id}`);
+    } catch (error) {
+      return handleApiError(error, `getSessionById(${id})`);
+    }
+  },
+  
+  createSession: async (session: CreateSessionRequest) => {
+    try {
+      console.log('Creating session with data:', session);
+      const response = await axiosInstance.post<Session>('/api/sessions', session);
+      console.log('Session created successfully:', response.data);
+      return response;
+    } catch (error) {
+      return handleApiError(error, 'createSession');
+    }
+  },
+  
+  updateSession: async (id: string, session: Partial<CreateSessionRequest>) => {
+    try {
+      console.log(`Updating session ${id} with data:`, session);
+      const response = await axiosInstance.put<Session>(`/api/sessions/${id}`, session);
+      console.log('Session updated successfully:', response.data);
+      return response;
+    } catch (error) {
+      return handleApiError(error, `updateSession(${id})`);
+    }
+  },
+  
+  deleteSession: async (id: string) => {
+    try {
+      return await axiosInstance.delete(`/api/sessions/${id}`);
+    } catch (error) {
+      return handleApiError(error, `deleteSession(${id})`);
+    }
+  },
+  
+  updateSessionStatus: async (id: string, status: string) => {
+    try {
+      return await axiosInstance.patch<Session>(`/api/sessions/${id}/status`, { status });
+    } catch (error) {
+      return handleApiError(error, `updateSessionStatus(${id})`);
+    }
+  },
+  
+  updateSessionProgress: async (id: string, data: { 
+    completionPercentage?: number, 
+    actualDurationMinutes?: number, 
+    notes?: string 
+  }) => {
+    try {
+      return await axiosInstance.patch<Session>(`/api/sessions/${id}/progress`, data);
+    } catch (error) {
+      return handleApiError(error, `updateSessionProgress(${id})`);
+    }
+  },
+  
+  completeSession: async (id: string, data: { 
+    actualDurationMinutes?: number, 
+    notes?: string 
+  }) => {
+    try {
+      return await axiosInstance.patch<Session>(`/api/sessions/${id}/complete`, data);
+    } catch (error) {
+      return handleApiError(error, `completeSession(${id})`);
+    }
   },
 
-  createSession: async (session: Omit<Session, 'id'>): Promise<ApiResponse<Session>> => {
-    const response = await api.post<ApiResponse<Session>>('/sessions', session);
-    return response.data;
+  getSessionsByTopic: async (topicId: string) => {
+    try {
+      return await axiosInstance.get<Session[]>(`/api/sessions/by-topic/${topicId}`);
+    } catch (error) {
+      return handleApiError(error, `getSessionsByTopic(${topicId})`);
+    }
   },
-
-  updateSession: async (id: string, session: Partial<Session>): Promise<ApiResponse<Session>> => {
-    const response = await api.put<ApiResponse<Session>>(`/sessions/${id}`, session);
-    return response.data;
+  
+  getSessionAnalytics: async () => {
+    try {
+      return await axiosInstance.get('/api/sessions/analytics');
+    } catch (error) {
+      return handleApiError(error, 'getSessionAnalytics');
+    }
   },
-
-  deleteSession: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete<ApiResponse<void>>(`/sessions/${id}`);
-    return response.data;
-  },
+  
+  getSessionAnalyticsByTopic: async () => {
+    try {
+      return await axiosInstance.get('/api/sessions/analytics/by-topic');
+    } catch (error) {
+      return handleApiError(error, 'getSessionAnalyticsByTopic');
+    }
+  }
 };
 
-// Progress API
+// Auth API endpoints
+export const authApi = {
+  login: (credentials: LoginCredentials) => 
+    axiosInstance.post('/api/auth/login', credentials),
+  register: (userData: RegisterCredentials) => 
+    axiosInstance.post('/api/auth/register', userData),
+  logout: () => axiosInstance.post('/api/auth/logout'),
+  refreshToken: () => axiosInstance.post('/api/auth/refresh-token'),
+  getCurrentUser: () => axiosInstance.get('/api/auth/me')
+};
+
+// Progress API endpoints
 export const progressApi = {
-  getProgress: async (): Promise<ApiResponse<Progress[]>> => {
-    const response = await api.get<ApiResponse<Progress[]>>('/progress');
-    return response.data;
-  },
-
-  addProgress: async (progress: Omit<Progress, 'id'>): Promise<ApiResponse<Progress>> => {
-    const response = await api.post<ApiResponse<Progress>>('/progress', progress);
-    return response.data;
-  },
+  getUserProgress: () => axiosInstance.get('/api/progress'),
+  updateProgress: (progressData: Partial<Progress>) =>
+    axiosInstance.post('/api/progress', progressData),
+  getProgressStats: () => axiosInstance.get('/api/progress/stats')
 };
 
-// Export default api instance
-export default api;
+// Streak API endpoints
+export interface UserStreakResponse {
+  userId: string;
+  currentStreak: number;
+  longestStreak: number;
+  totalLearningDays: number;
+  lastLearningDate: string | null;
+  totalStudyTimeMinutes: number;
+  weeklyStudyMinutes: number[];
+  totalNodesCompleted: number;
+  totalRoadmapsCompleted: number;
+  streakFreezeCount: number;
+  formattedTotalStudyTime: string;
+}
+
+export const streakApi = {
+  getMyStreak: () => axiosInstance.get<UserStreakResponse>('/api/streaks/my-streak'),
+  recordActivity: (studyTimeMinutes: number, activityDate: string) =>
+    axiosInstance.post<UserStreakResponse>('/api/streaks/record-activity', {
+      studyTimeMinutes,
+      activityDate,
+    }),
+};

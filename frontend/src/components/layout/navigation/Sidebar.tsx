@@ -12,7 +12,7 @@ export function Sidebar() {
     <div
       className={`fixed left-0 top-0 h-full bg-gradient-to-b from-violet-950/95 to-slate-900/95 backdrop-blur-lg ${
         isSidebarOpen ? "w-64" : "w-20"
-      } border-r border-white/5 transition-all duration-300`}
+      } border-r border-white/5 transition-all duration-300 z-50`}
     >
       {/* Logo and Toggle */}
       <div className="flex items-center h-16 px-4">
@@ -41,7 +41,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Items */}
-      <div className="mt-8 px-3 space-y-2">
+      <div className="py-4 px-3 flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-8rem)]">
         {mainNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -68,7 +68,10 @@ export function Sidebar() {
       {/* Logout Button */}
       <div className="absolute bottom-8 px-3 w-full">
         <button
-          onClick={() => navigate("/login")}
+          onClick={() => {
+            localStorage.removeItem('token');
+            navigate("/login");
+          }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />

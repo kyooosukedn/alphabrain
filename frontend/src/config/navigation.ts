@@ -1,9 +1,12 @@
 import {
   BookOpen,
-  BarChart3,
+  Map,
+  Network,
+  Brain,
+  Sparkles,
+  Route,
   Calendar,
-  Settings,
-  Target,
+  BarChart3,
 } from "lucide-react";
 
 export interface NavItem {
@@ -14,8 +17,11 @@ export interface NavItem {
 
 export const mainNavItems: NavItem[] = [
   { icon: BookOpen, label: "Dashboard", path: "/" },
-  { icon: BarChart3, label: "Progress", path: "/progress" },
+  { icon: Route, label: "Learning Journey", path: "/learning-journey" },
+  { icon: Network, label: "Topics", path: "/topics" },
+  { icon: Brain, label: "Knowledge Graph", path: "/knowledge-graph" },
   { icon: Calendar, label: "Schedule", path: "/schedule" },
-  { icon: Target, label: "Goals", path: "/goals" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: BarChart3, label: "Progress", path: "/progress" },
+  { icon: Sparkles, label: "AI Recommendations", path: "/ai-recommendations" },
+  { icon: Map, label: "Roadmaps", path: "/roadmaps" },
 ];

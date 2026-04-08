@@ -2,53 +2,49 @@
 
 ## Current Position
 
-**Active Phase:** Phase 1 — Fix Critical App Foundation
-**Status:** Planning complete, not yet executed
-**Date:** 2026-04-06
+**Active Phase:** Phase 5 — AI Recommendations Polish
+**Status:** Phases 1-4 complete
+**Date:** 2026-04-08
 
 ## What's Done
 
 ### Backend (Complete)
 - Spring Boot app runs on port 8081
-- MongoDB integration with all models (User, Session, Subject, KnowledgeNode)
+- MongoDB integration with all models (User, Session, Subject, KnowledgeNode, Roadmap, UserProgress, UserStreak)
 - JWT auth (register, login)
-- Full CRUD REST APIs for sessions, subjects, knowledge nodes
+- Full CRUD REST APIs for sessions, subjects, knowledge nodes, roadmaps, user progress
 - Spring Security config, CORS configured for localhost:5173
 - Global exception handling
+- AI recommendation endpoint (Gemini)
 
-### Frontend (Partially Built, Broken)
-- Project scaffolded with Vite + React + TypeScript
-- Tailwind + shadcn/ui installed and configured
-- Redux store exists with slices: auth, sessions, topics, progress, aiRecommendations
-- Components exist: Login.tsx, Signup.tsx, Dashboard.tsx, KnowledgeGraph.tsx, Schedule.tsx, AIRecommendations.tsx, Navigation.tsx
-- Pages exist: KnowledgeGraphPage.tsx, AIRecommendationsPage.tsx, LearningRoadmap.tsx, RoadmapList.tsx, RoadmapDetail.tsx
-- ProtectedRoute.tsx component exists
+### Frontend — Phase 1 Complete
+- App.tsx: clean React Router setup with all routes (login, signup, dashboard, learning-journey, topics, knowledge-graph, ai-recommendations, roadmaps, roadmap/:id)
+- main.tsx: Redux Provider + QueryClientProvider wrapping App
+- All MUI imports removed — fully migrated to Tailwind/shadcn
+- RoadmapList.tsx and RoadmapDetail.tsx rewritten with shadcn components
+- Dead MUI Navigation.tsx deleted
+- RoadmapService.ts import path fixed
+- UserProgressService.ts implemented (was empty)
+- SessionForm.tsx dayjs bug fixed (replaced with native Date)
+- Build succeeds (vite build passes)
 
-## Critical Bugs (Phase 1 Targets)
-
-1. **App.tsx imports @mui/material** — `ThemeProvider`, `CssBaseline` from MUI, plus a missing `./theme` module. MUI is not in package.json. App will not compile.
-2. **No Redux Provider in main.tsx** — Store exists but is never provided to the component tree. All Redux hooks will throw.
-3. **Auth components not routed** — Login.tsx and Signup.tsx exist but are not in any Route. Users cannot log in.
-4. **KnowledgeGraphPage not in routes** — Page exists but no route defined for it.
-5. **main.tsx imports aframe** — `import 'aframe'` and `import 'aframe-extras'` at top of main.tsx (not in package.json, not needed).
-
-## Accumulated Decisions
-
-- Remove all @mui/material usage — replace with Tailwind/shadcn equivalents
-- Redux Provider must wrap the entire app in main.tsx
-- Auth flow: `/login` and `/signup` routes, redirect to `/dashboard` on success
-- Protected routes use existing `<ProtectedRoute>` component
-- No aframe/3D — remove those imports
+### Frontend — Existing Working Components
+- Sidebar navigation (Tailwind, uses config/navigation.ts)
+- AppLayout wrapping all protected routes
+- ProtectedRoute with JWT token validation
+- Auth components (Login, Signup) — fully functional
+- shadcn/ui component library installed
+- Redux store with 5 slices: auth, sessions, topics, progress, aiRecommendations
 
 ## Pending Work (by phase)
 
-- **Phase 1:** Fix App.tsx, add Redux Provider, wire auth routes
-- **Phase 2:** Wire all pages into routes, sidebar nav, protected route wrapping
+- **Phase 2:** Audit which pages actually render vs. are stubs, connect real API data
 - **Phase 3:** Knowledge graph — real API calls, node CRUD, visual polish
 - **Phase 4:** Dashboard with real session/progress data, streak tracking
 - **Phase 5:** AI recommendations with Gemini API integration
 
-## Blockers / Concerns
+## Notes
 
-- Until Phase 1 is complete, the app cannot run at all — all subsequent phases are blocked
-- Need to audit what pages actually render vs. are stubs before Phase 2
+- CSS warning: `@import` in index.css should come before `@tailwind` directives
+- Build produces a 2.2MB JS bundle — needs code splitting eventually
+- The `routes/index.tsx` file defines an alternate routing setup (not used by App.tsx) — can be deleted

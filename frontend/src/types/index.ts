@@ -1,9 +1,10 @@
 export interface User {
   id: string;
+  username?: string;
   email: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
+  name?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Session {
@@ -25,13 +26,19 @@ export interface Progress {
 }
 
 export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  username: string;
   email: string;
   password: string;
 }
 
-export interface RegisterCredentials extends LoginCredentials {
-  name: string;
-  confirmPassword: string;
+export interface AuthResponse {
+  token: string;
+  message?: string;
 }
 
 export interface ApiResponse<T> {

@@ -2,14 +2,17 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import sessionsReducer from './slices/sessionsSlice';
 import progressReducer from './slices/progressSlice';
-import type { RootState } from '../types';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import topicsReducer from './slices/topicsSlice';
+import aiRecommendationsReducer from './slices/aiRecommendationsSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     sessions: sessionsReducer,
     progress: progressReducer,
+    topics: topicsReducer,
+    aiRecommendations: aiRecommendationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -46,8 +49,10 @@ export const store = configureStore({
 });
 
 // Infer the `AppDispatch` types from the store itself
+export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 // Export a hook that can be reused to resolve types
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
