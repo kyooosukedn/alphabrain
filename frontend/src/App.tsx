@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './components/auth/Login';
@@ -6,17 +6,26 @@ import Signup from './components/auth/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import { Toaster } from './components/ui/toaster';
+import { Loader2 } from 'lucide-react';
 
-// Pages
-import Dashboard from './components/Dashboard';
-import LearningRoadmap from './pages/LearningRoadmap';
-import KnowledgeGraphPage from './pages/KnowledgeGraphPage';
-import AIRecommendationsPage from './pages/AIRecommendationsPage';
-import RoadmapList from './pages/RoadmapList';
-import RoadmapDetail from './pages/RoadmapDetail';
-import TopicsPage from './pages/TopicsPage';
-import Schedule from './components/Schedule';
-import ProgressPage from './components/progress/ProgressPage';
+// Lazy-loaded pages — each becomes its own chunk at build time
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const LearningRoadmap = React.lazy(() => import('./pages/LearningRoadmap'));
+const KnowledgeGraphPage = React.lazy(() => import('./pages/KnowledgeGraphPage'));
+const AIRecommendationsPage = React.lazy(() => import('./pages/AIRecommendationsPage'));
+const RoadmapList = React.lazy(() => import('./pages/RoadmapList'));
+const RoadmapDetail = React.lazy(() => import('./pages/RoadmapDetail'));
+const TopicsPage = React.lazy(() => import('./pages/TopicsPage'));
+const Schedule = React.lazy(() => import('./components/Schedule'));
+const ProgressPage = React.lazy(() => import('./components/progress/ProgressPage'));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+    </div>
+  );
+}
 
 const App: React.FC = () => {
   return (
@@ -46,18 +55,20 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute requireAuth={true}>
               <AppLayout>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/learning-journey" element={<LearningRoadmap />} />
-                  <Route path="/topics" element={<TopicsPage />} />
-                  <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
-                  <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
-                  <Route path="/schedule" element={<Schedule />} />
-                  <Route path="/progress" element={<ProgressPage />} />
-                  <Route path="/roadmaps" element={<RoadmapList />} />
-                  <Route path="/roadmap/:id" element={<RoadmapDetail />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/learning-journey" element={<LearningRoadmap />} />
+                    <Route path="/topics" element={<TopicsPage />} />
+                    <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
+                    <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
+                    <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/progress" element={<ProgressPage />} />
+                    <Route path="/roadmaps" element={<RoadmapList />} />
+                    <Route path="/roadmap/:id" element={<RoadmapDetail />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Suspense>
               </AppLayout>
             </ProtectedRoute>
           }
