@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -8,62 +9,43 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
-  errorInfo: ErrorInfo | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
+  public state: State = { hasError: false, error: null };
 
   public static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-      errorInfo: null,
-    };
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
-    this.setState({
-      error,
-      errorInfo,
-    });
   }
 
   public render() {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-              <div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                  Something went wrong
-                </h2>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    {this.state.error?.message}
-                  </p>
-                  {process.env.NODE_ENV === 'development' && (
-                    <pre className="mt-2 text-xs text-red-600 overflow-auto max-h-40">
-                      {this.state.error?.stack}
-                    </pre>
-                  )}
-                </div>
-                <div className="mt-6">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Reload page
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] p-8">
+            <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-sm text-slate-400 mb-1 text-center max-w-md">
+              The page failed to load. This can happen after an update — try reloading.
+            </p>
+            {import.meta.env.DEV && this.state.error && (
+              <pre className="mt-3 text-xs text-red-400 bg-slate-900 border border-slate-800 rounded p-3 overflow-auto max-h-40 max-w-lg w-full">
+                {this.state.error.message}
+              </pre>
+            )}
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reload page
+            </button>
           </div>
         )
       );

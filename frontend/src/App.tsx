@@ -6,6 +6,7 @@ import Signup from './components/auth/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 import { Toaster } from './components/ui/toaster';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
 // Lazy-loaded pages — each becomes its own chunk at build time
@@ -55,20 +56,22 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute requireAuth={true}>
               <AppLayout>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/learning-journey" element={<LearningRoadmap />} />
-                    <Route path="/topics" element={<TopicsPage />} />
-                    <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
-                    <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
-                    <Route path="/schedule" element={<Schedule />} />
-                    <Route path="/progress" element={<ProgressPage />} />
-                    <Route path="/roadmaps" element={<RoadmapList />} />
-                    <Route path="/roadmap/:id" element={<RoadmapDetail />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
+                <ErrorBoundary>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/learning-journey" element={<LearningRoadmap />} />
+                      <Route path="/topics" element={<TopicsPage />} />
+                      <Route path="/knowledge-graph" element={<KnowledgeGraphPage />} />
+                      <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
+                      <Route path="/schedule" element={<Schedule />} />
+                      <Route path="/progress" element={<ProgressPage />} />
+                      <Route path="/roadmaps" element={<RoadmapList />} />
+                      <Route path="/roadmap/:id" element={<RoadmapDetail />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
               </AppLayout>
             </ProtectedRoute>
           }
