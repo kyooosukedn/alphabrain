@@ -1,17 +1,20 @@
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Sparkles, LogOut } from "lucide-react";
 import { mainNavItems } from "@/config/navigation";
+import { useAppDispatch } from "@/store";
+import { logout } from "@/store/slices/authSlice";
+import { useSidebar } from "../SidebarContext";
 
 export function Sidebar() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { isOpen, toggle } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useAppDispatch();
 
   return (
     <div
       className={`fixed left-0 top-0 h-full bg-gradient-to-b from-violet-950/95 to-slate-900/95 backdrop-blur-lg ${
-        isSidebarOpen ? "w-64" : "w-20"
+        isOpen ? "w-64" : "w-20"
       } border-r border-white/5 transition-all duration-300 z-50`}
     >
       {/* Logo and Toggle */}
@@ -22,17 +25,17 @@ export function Sidebar() {
               <Sparkles className="w-6 h-6 text-white" />
             </div>
           </div>
-          {isSidebarOpen && (
+          {isOpen && (
             <span className="text-lg font-semibold text-white">
               AlphaBrain
             </span>
           )}
         </div>
         <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          onClick={toggle}
           className="ml-auto p-2 hover:bg-white/5 rounded-lg"
         >
-          {isSidebarOpen ? (
+          {isOpen ? (
             <X className="w-5 h-5 text-white" />
           ) : (
             <Menu className="w-5 h-5 text-white" />
@@ -57,7 +60,7 @@ export function Sidebar() {
               `}
             >
               <item.icon className="w-5 h-5" />
-              {isSidebarOpen && (
+              {isOpen && (
                 <span className="font-medium">{item.label}</span>
               )}
             </button>
@@ -69,13 +72,13 @@ export function Sidebar() {
       <div className="absolute bottom-8 px-3 w-full">
         <button
           onClick={() => {
-            localStorage.removeItem('token');
+            dispatch(logout());
             navigate("/login");
           }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-white/5 hover:text-white transition-colors duration-200"
         >
           <LogOut className="w-5 h-5" />
-          {isSidebarOpen && <span className="font-medium">Logout</span>}
+          {isOpen && <span className="font-medium">Logout</span>}
         </button>
       </div>
     </div>

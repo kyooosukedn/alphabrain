@@ -10,6 +10,8 @@ export default defineConfig({
     },
   },
   build: {
+    // Strip console.log/warn/error in production builds
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -26,5 +28,8 @@ export default defineConfig({
         },
       },
     },
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
   },
 })
