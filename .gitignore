@@ -1,0 +1,22 @@
+# IDE / Editor
+.idea/
+.vscode/
+.cursor/
+.claude/
+*.iml
+
+# Environment / Secrets
+.env
+*.env.local
+
+# Generated outputs
+repomix-output.*
+frontend/repomix-output.*
+query
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local scripts
+start-alphabrain.bat
