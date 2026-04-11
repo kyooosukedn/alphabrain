@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alphabrain.dto.ai.ConnectionSuggestion;
 import com.alphabrain.model.KnowledgeNode;
+import com.alphabrain.service.GraphSuggestionService;
 import com.alphabrain.service.KnowledgeNodeService;
 
 @RestController
@@ -27,6 +29,9 @@ public class KnowledgeNodeController {
     
     @Autowired
     private KnowledgeNodeService knowledgeNodeService;
+
+    @Autowired
+    private GraphSuggestionService graphSuggestionService;
     
     /**
      * Create a new knowledge node
@@ -178,6 +183,67 @@ public class KnowledgeNodeController {
         }
     }
     
+    /**
+     * Get AI-suggested connections for a node
+     */
+    @GetMapping("/{id}/suggest-connections")
+    public ResponseEntity<List<ConnectionSuggestion>> suggestConnections(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Optional<KnowledgeNode> nodeOpt = knowledgeNodeService.getNodeById(id);
+        if (nodeOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        KnowledgeNode node = nodeOpt.get();
+        if (node.getUserId() != null && !node.getUserId().equals(userDetails.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<ConnectionSuggestion> suggestions =
+                graphSuggestionService.suggestConnections(id, userDetails.getUsername());
+        return ResponseEntity.ok(suggestions);
+    }
+
+    /**
+     * Accept a suggested connection — adds the relationship to both nodes
+     */
+    @PostMapping("/{id}/accept-connection")
+    public ResponseEntity<Map<String, Object>> acceptConnection(
+            @PathVariable String id,
+            @RequestBody ConnectionSuggestion suggestion,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Optional<KnowledgeNode> sourceOpt = knowledgeNodeService.getNodeById(suggestion.getSourceNodeId());
+        Optional<KnowledgeNode> targetOpt = knowledgeNodeService.getNodeById(suggestion.getTargetNodeId());
+
+        if (sourceOpt.isEmpty() || targetOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Source or target node not found"));
+        }
+
+        KnowledgeNode source = sourceOpt.get();
+        KnowledgeNode target = targetOpt.get();
+
+        // Add to source's leadsTo if not already there
+        if (!source.getLeadsTo().contains(target.getId())) {
+            source.getLeadsTo().add(target.getId());
+            knowledgeNodeService.updateNode(source.getId(), source);
+        }
+
+        // Add to target's prerequisites if not already there
+        if (!target.getPrerequisites().contains(source.getId())) {
+            target.getPrerequisites().add(source.getId());
+            knowledgeNodeService.updateNode(target.getId(), target);
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Connection added",
+                "sourceId", source.getId(),
+                "targetId", target.getId()
+        ));
+    }
+
     /**
      * Search for nodes by title
      */

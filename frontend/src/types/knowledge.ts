@@ -47,6 +47,15 @@ export interface GraphData {
   links: GraphLink[];
 }
 
+export interface ConnectionSuggestion {
+  sourceNodeId: string;
+  sourceNodeTitle: string;
+  targetNodeId: string;
+  targetNodeTitle: string;
+  relationshipType: 'prerequisite' | 'leadsTo';
+  reasoning: string;
+}
+
 export interface NodePosition {
   nodeId: string;
   x: number;

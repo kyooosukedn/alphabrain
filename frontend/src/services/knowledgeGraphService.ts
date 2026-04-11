@@ -1,5 +1,5 @@
 import axiosInstance from '../config/axiosConfig';
-import { KnowledgeNode, GraphNode, GraphLink, GraphData } from '../types/knowledge';
+import { KnowledgeNode, GraphNode, GraphLink, GraphData, ConnectionSuggestion } from '../types/knowledge';
 
 const BASE_URL = '/api/nodes';
 
@@ -89,6 +89,17 @@ export const deleteKnowledgeNode = async (nodeId: string): Promise<void> => {
 export const searchNodes = async (title: string): Promise<KnowledgeNode[]> => {
   const response = await axiosInstance.get<KnowledgeNode[]>(`${BASE_URL}/search/${title}`);
   return response.data;
+};
+
+// Get AI-suggested connections for a node
+export const suggestConnections = async (nodeId: string): Promise<ConnectionSuggestion[]> => {
+  const response = await axiosInstance.get<ConnectionSuggestion[]>(`${BASE_URL}/${nodeId}/suggest-connections`);
+  return response.data;
+};
+
+// Accept a suggested connection
+export const acceptConnection = async (nodeId: string, suggestion: ConnectionSuggestion): Promise<void> => {
+  await axiosInstance.post(`${BASE_URL}/${nodeId}/accept-connection`, suggestion);
 };
 
 // Mock data for testing when backend is not available
