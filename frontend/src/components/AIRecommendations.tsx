@@ -1,6 +1,12 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
-import { checkAIStatus } from '../store/slices/aiRecommendationsSlice';
+import {
+  fetchRecommendations,
+  refreshRecommendations,
+  LearningPath,
+  SuggestedRoadmap,
+  NextStep,
+} from '../store/slices/aiRecommendationsSlice';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -15,11 +21,12 @@ import {
   BookOpen,
   Clock,
   BarChart3,
+  RefreshCw,
 } from 'lucide-react';
 
-// ─── Demo data shown when AI backend is not yet enabled ───
+// ─── Demo data shown when AI backend is not enabled ───
 
-const demoLearningPaths = [
+const demoLearningPaths: LearningPath[] = [
   {
     id: '1',
     title: 'Frontend Development Path',
@@ -46,10 +53,10 @@ const demoLearningPaths = [
   },
 ];
 
-const demoRoadmap = {
+const demoRoadmap: SuggestedRoadmap = {
   title: 'Full-Stack Developer Roadmap',
   description:
-    'Complete learning journey to becoming a full-stack developer with skills in both frontend and backend technologies. Covers all essential technologies and concepts needed for modern web development.',
+    'Complete learning journey to becoming a full-stack developer with skills in both frontend and backend technologies.',
   category: 'Web Development',
   difficulty: 'Advanced',
   estimatedHours: 300,
@@ -64,7 +71,7 @@ const demoRoadmap = {
   ],
 };
 
-const demoNextSteps = [
+const demoNextSteps: NextStep[] = [
   {
     id: 'step1',
     title: 'Learn React Hooks',
@@ -105,16 +112,129 @@ function difficultyColor(level: number): string {
   return 'text-red-400';
 }
 
-// ─── Component ───
+function difficultyStringColor(level: string): string {
+  if (level === 'Beginner') return 'text-green-400';
+  if (level === 'Intermediate') return 'text-yellow-400';
+  return 'text-red-400';
+}
+
+// ─── Sub-components ───
+
+function LearningPathCards({ paths }: { paths: LearningPath[] }) {
+  return (
+    <div className="grid gap-4">
+      {paths.map((path) => (
+        <Card key={path.id} className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-white flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-violet-400" />
+              {path.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-400 mb-3">{path.description}</p>
+            <div className="flex items-center gap-4 text-xs">
+              <span className={difficultyColor(path.difficulty)}>
+                {difficultyLabel(path.difficulty)}
+              </span>
+              <span className="text-slate-500 flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {path.estimatedHours} hrs
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function RoadmapCard({ roadmap }: { roadmap: SuggestedRoadmap }) {
+  return (
+    <Card className="bg-slate-900 border-slate-800">
+      <CardHeader>
+        <CardTitle className="text-lg text-white">{roadmap.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-slate-400">{roadmap.description}</p>
+
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-slate-500">Category: {roadmap.category}</span>
+          <span className={difficultyStringColor(roadmap.difficulty)}>
+            {roadmap.difficulty}
+          </span>
+          <span className="text-slate-500 flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {roadmap.estimatedHours} hrs
+          </span>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm text-slate-300">Overall Progress</span>
+            <span className="text-sm text-slate-500">
+              {roadmap.completionPercentage}%
+            </span>
+          </div>
+          <Progress value={roadmap.completionPercentage} className="h-2" />
+        </div>
+
+        <div className="space-y-2 pt-2">
+          <span className="text-sm font-medium text-slate-300">Milestones</span>
+          {roadmap.milestones.map((m) => (
+            <div key={m.label} className="flex items-center gap-2 text-sm">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  m.done ? 'bg-green-500' : 'bg-slate-600'
+                }`}
+              />
+              <span className={m.done ? 'text-slate-300' : 'text-slate-500'}>
+                {m.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function NextStepCards({ steps }: { steps: NextStep[] }) {
+  return (
+    <div className="grid gap-4">
+      {steps.map((step) => (
+        <Card key={step.id} className="bg-slate-900 border-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-white flex items-center gap-2">
+              <Footprints className="h-5 w-5 text-green-400" />
+              {step.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-400 mb-3">{step.description}</p>
+            <div className="flex items-center gap-4 text-xs">
+              <span className={difficultyColor(step.difficulty)}>
+                {difficultyLabel(step.difficulty)}
+              </span>
+              <span className="text-slate-500 flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {step.estimatedMinutes} min
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Component ───
 
 const AIRecommendations: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { statusMessage, aiEnabled, loading, error } = useAppSelector(
+  const { data, loading, refreshing, error } = useAppSelector(
     (state) => state.aiRecommendations
   );
 
   useEffect(() => {
-    dispatch(checkAIStatus());
+    dispatch(fetchRecommendations());
   }, [dispatch]);
 
   // Loading state
@@ -122,7 +242,7 @@ const AIRecommendations: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px]">
         <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
-        <p className="text-slate-400">Checking AI recommendation status...</p>
+        <p className="text-slate-400">Generating personalized recommendations...</p>
       </div>
     );
   }
@@ -134,14 +254,30 @@ const AIRecommendations: React.FC = () => {
         <AlertCircle className="h-8 w-8 text-destructive mb-4" />
         <p className="text-slate-300 mb-2">Could not reach the AI service.</p>
         <p className="text-sm text-slate-500 mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => dispatch(checkAIStatus())}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => dispatch(fetchRecommendations())}
+        >
           Retry
         </Button>
       </div>
     );
   }
 
-  // AI is not enabled on the backend — show demo preview
+  const aiEnabled = data?.aiEnabled ?? false;
+
+  // Decide data source: real AI data or demo fallback
+  const learningPaths = aiEnabled && data?.learningPaths?.length
+    ? data.learningPaths
+    : demoLearningPaths;
+  const roadmap = aiEnabled && data?.roadmap
+    ? data.roadmap
+    : demoRoadmap;
+  const nextSteps = aiEnabled && data?.nextSteps?.length
+    ? data.nextSteps
+    : demoNextSteps;
+
   return (
     <div className="space-y-6">
       {/* Status banner */}
@@ -151,11 +287,38 @@ const AIRecommendations: React.FC = () => {
           <AlertDescription className="text-slate-300">
             <span className="font-medium text-violet-300">Preview Mode</span> — AI
             recommendations powered by Gemini are coming soon.{' '}
-            {statusMessage && (
-              <span className="text-slate-500 text-sm">({statusMessage})</span>
+            {data?.statusMessage && (
+              <span className="text-slate-500 text-sm">({data.statusMessage})</span>
             )}
           </AlertDescription>
         </Alert>
+      )}
+
+      {aiEnabled && (
+        <div className="flex items-center justify-between">
+          <Alert className="bg-green-500/10 border-green-500/30 flex-1">
+            <Sparkles className="h-4 w-4 text-green-400" />
+            <AlertDescription className="text-slate-300">
+              <span className="font-medium text-green-300">AI Powered</span> —
+              Personalized recommendations based on your learning activity.
+              {data?.generatedAt && (
+                <span className="text-slate-500 text-sm ml-1">
+                  (generated {new Date(data.generatedAt).toLocaleTimeString()})
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-3 text-slate-400 hover:text-white"
+            onClick={() => dispatch(refreshRecommendations())}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Regenerating...' : 'Refresh'}
+          </Button>
+        </div>
       )}
 
       <Tabs defaultValue="learningPaths" className="w-full">
@@ -171,109 +334,16 @@ const AIRecommendations: React.FC = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* ─── Learning Paths Tab ─── */}
         <TabsContent value="learningPaths">
-          <div className="grid gap-4">
-            {demoLearningPaths.map((path) => (
-              <Card key={path.id} className="bg-slate-900 border-slate-800">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-violet-400" />
-                    {path.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-400 mb-3">{path.description}</p>
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className={difficultyColor(path.difficulty)}>
-                      {difficultyLabel(path.difficulty)}
-                    </span>
-                    <span className="text-slate-500 flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {path.estimatedHours} hrs
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <LearningPathCards paths={learningPaths} />
         </TabsContent>
 
-        {/* ─── Roadmap Tab ─── */}
         <TabsContent value="roadmap">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-lg text-white">{demoRoadmap.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-slate-400">{demoRoadmap.description}</p>
-
-              <div className="flex items-center gap-4 text-xs">
-                <span className="text-slate-500">Category: {demoRoadmap.category}</span>
-                <span className="text-yellow-400">{demoRoadmap.difficulty}</span>
-                <span className="text-slate-500 flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {demoRoadmap.estimatedHours} hrs
-                </span>
-              </div>
-
-              {/* Progress */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-slate-300">Overall Progress</span>
-                  <span className="text-sm text-slate-500">
-                    {demoRoadmap.completionPercentage}%
-                  </span>
-                </div>
-                <Progress value={demoRoadmap.completionPercentage} className="h-2" />
-              </div>
-
-              {/* Milestones */}
-              <div className="space-y-2 pt-2">
-                <span className="text-sm font-medium text-slate-300">Milestones</span>
-                {demoRoadmap.milestones.map((m) => (
-                  <div
-                    key={m.label}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        m.done ? 'bg-green-500' : 'bg-slate-600'
-                      }`}
-                    />
-                    <span className={m.done ? 'text-slate-300' : 'text-slate-500'}>
-                      {m.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <RoadmapCard roadmap={roadmap} />
         </TabsContent>
 
-        {/* ─── Next Steps Tab ─── */}
         <TabsContent value="nextSteps">
-          <div className="grid gap-4">
-            {demoNextSteps.map((step) => (
-              <Card key={step.id} className="bg-slate-900 border-slate-800">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <Footprints className="h-5 w-5 text-green-400" />
-                    {step.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-400 mb-3">{step.description}</p>
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className={difficultyColor(step.difficulty)}>
-                      {difficultyLabel(step.difficulty)}
-                    </span>
-                    <span className="text-slate-500 flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {step.estimatedMinutes} min
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <NextStepCards steps={nextSteps} />
         </TabsContent>
       </Tabs>
     </div>
