@@ -179,6 +179,43 @@ export interface UserStreakResponse {
   formattedTotalStudyTime: string;
 }
 
+// Review card types
+export interface ReviewCard {
+  id: string;
+  userId: string;
+  nodeId: string;
+  easeFactor: number;
+  interval: number;
+  repetitions: number;
+  nextReviewDate: string;
+  lastReviewedAt: string | null;
+  totalReviews: number;
+  successfulReviews: number;
+  nodeTitle: string;
+  nodeCategory: string;
+  nodeDifficulty: number;
+  createdAt: string;
+}
+
+export interface ReviewStats {
+  totalCards: number;
+  dueToday: number;
+  totalReviews: number;
+  successfulReviews: number;
+  retentionRate: number;
+}
+
+export const reviewApi = {
+  getDueCards: () => axiosInstance.get<ReviewCard[]>('/api/reviews/due'),
+  getDueCount: () => axiosInstance.get<{ count: number }>('/api/reviews/due/count'),
+  getAllCards: () => axiosInstance.get<ReviewCard[]>('/api/reviews/all'),
+  getStats: () => axiosInstance.get<ReviewStats>('/api/reviews/stats'),
+  enableAll: () => axiosInstance.post<{ created: number; message: string }>('/api/reviews/enable-all'),
+  enableNode: (nodeId: string) => axiosInstance.post<ReviewCard>(`/api/reviews/enable/${nodeId}`),
+  submitReview: (cardId: string, quality: number) =>
+    axiosInstance.post<ReviewCard>(`/api/reviews/${cardId}/submit`, { quality }),
+};
+
 export const streakApi = {
   getMyStreak: () => axiosInstance.get<UserStreakResponse>('/api/streaks/my-streak'),
   recordActivity: (studyTimeMinutes: number, activityDate: string) =>

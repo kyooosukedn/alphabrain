@@ -21,10 +21,11 @@ import { MetricCard } from "./dashboard/MetricCard";
 import { StudySessionCard } from "./dashboard/StudySessionCard";
 import type { StudySession } from '@/types/dashboard';
 import { useQuery } from '@tanstack/react-query';
-import { sessionsApi, topicsApi, streakApi } from '@/services/api';
+import { sessionsApi, topicsApi, streakApi, reviewApi } from '@/services/api';
 import { Session } from '@/types/session';
 import { sessionToStudySession } from '@/utils/mappers';
 import { useToast } from '@/hooks/use-toast';
+import { Brain } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -67,6 +68,18 @@ export default function Dashboard() {
     },
     retry: false,
   });
+
+  // Fetch review due count
+  const { data: reviewDueData } = useQuery({
+    queryKey: ['reviewDueCount'],
+    queryFn: async () => {
+      const response = await reviewApi.getDueCount();
+      return response.data;
+    },
+    retry: false,
+  });
+
+  const dueReviewCount = reviewDueData?.count ?? 0;
 
   // Transform sessions for display
   const studySessions: StudySession[] = sessionsData
@@ -218,6 +231,31 @@ export default function Dashboard() {
           tooltipText="Percentage of sessions completed"
         />
       </div>
+
+      {/* Due Reviews Banner */}
+      {dueReviewCount > 0 && (
+        <Card className="bg-violet-500/10 border-violet-500/30 cursor-pointer hover:bg-violet-500/15 transition-colors"
+              onClick={() => navigate('/reviews')}>
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-violet-500/20 flex items-center justify-center">
+                <Brain className="h-5 w-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="font-medium text-violet-300">
+                  {dueReviewCount} card{dueReviewCount !== 1 ? 's' : ''} due for review
+                </p>
+                <p className="text-sm text-slate-500">
+                  Spaced repetition keeps knowledge fresh
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="border-violet-500/30 text-violet-300 hover:bg-violet-500/20">
+              Start Review <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Sessions + Progress Sidebar */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

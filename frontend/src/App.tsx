@@ -19,6 +19,7 @@ const RoadmapDetail = React.lazy(() => import('./pages/RoadmapDetail'));
 const TopicsPage = React.lazy(() => import('./pages/TopicsPage'));
 const Schedule = React.lazy(() => import('./components/Schedule'));
 const ProgressPage = React.lazy(() => import('./components/progress/ProgressPage'));
+const ReviewPage = React.lazy(() => import('./pages/ReviewPage'));
 
 function PageLoader() {
   return (
@@ -66,6 +67,7 @@ const App: React.FC = () => {
                       <Route path="/ai-recommendations" element={<AIRecommendationsPage />} />
                       <Route path="/schedule" element={<Schedule />} />
                       <Route path="/progress" element={<ProgressPage />} />
+                      <Route path="/reviews" element={<ReviewPage />} />
                       <Route path="/roadmaps" element={<RoadmapList />} />
                       <Route path="/roadmap/:id" element={<RoadmapDetail />} />
                       <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,6 +7,7 @@ import {
   Route,
   Calendar,
   BarChart3,
+  RotateCcw,
 } from "lucide-react";
 
 export interface NavItem {
@@ -20,6 +21,7 @@ export const mainNavItems: NavItem[] = [
   { icon: Route, label: "Learning Journey", path: "/learning-journey" },
   { icon: Network, label: "Topics", path: "/topics" },
   { icon: Brain, label: "Knowledge Graph", path: "/knowledge-graph" },
+  { icon: RotateCcw, label: "Review", path: "/reviews" },
   { icon: Calendar, label: "Schedule", path: "/schedule" },
   { icon: BarChart3, label: "Progress", path: "/progress" },
   { icon: Sparkles, label: "AI Recommendations", path: "/ai-recommendations" },
