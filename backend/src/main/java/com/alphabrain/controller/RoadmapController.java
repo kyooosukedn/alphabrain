@@ -285,51 +285,36 @@ public class RoadmapController {
     public ResponseEntity<List<Roadmap>> getTemplateRoadmaps() {
         return ResponseEntity.ok(roadmapService.getTemplateRoadmaps());
     }
-    
-    @GetMapping("/user")
-    public ResponseEntity<List<Roadmap>> getUserRoadmaps(@AuthenticationPrincipal String userId) {
-        return ResponseEntity.ok(roadmapService.getUserRoadmaps(userId));
-    }
-    
+
     @GetMapping("/category/{category}")
     public ResponseEntity<List<Roadmap>> getRoadmapsByCategory(@PathVariable String category) {
         return ResponseEntity.ok(roadmapService.getRoadmapsByCategory(category));
     }
-    
+
     @GetMapping("/difficulty/{level}")
     public ResponseEntity<List<Roadmap>> getRoadmapsByDifficulty(@PathVariable String level) {
         return ResponseEntity.ok(roadmapService.getRoadmapsByDifficulty(level));
     }
-    
+
     @GetMapping("/search")
     public ResponseEntity<List<Roadmap>> searchRoadmaps(@RequestParam String query) {
         return ResponseEntity.ok(roadmapService.searchRoadmaps(query));
     }
-    
+
     @GetMapping("/tags")
     public ResponseEntity<List<Roadmap>> getRoadmapsByTags(@RequestParam List<String> tags) {
         return ResponseEntity.ok(roadmapService.getRoadmapsByTags(tags));
     }
-    
-    @GetMapping("/{id}")
-    public ResponseEntity<Roadmap> getRoadmap(
-            @PathVariable String id,
-            @AuthenticationPrincipal String userId) {
-        if (!roadmapService.canUserAccessRoadmap(userId, id)) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(roadmapService.getRoadmap(id));
-    }
-    
+
     @PostMapping("/templates/{templateId}/clone")
     public ResponseEntity<Roadmap> cloneTemplate(
             @PathVariable String templateId,
-            @AuthenticationPrincipal String userId) {
-        return ResponseEntity.ok(roadmapService.cloneTemplate(templateId, userId));
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(roadmapService.cloneTemplate(templateId, userDetails.getUsername()));
     }
-    
+
     @GetMapping("/user/count")
-    public ResponseEntity<Long> countUserRoadmaps(@AuthenticationPrincipal String userId) {
-        return ResponseEntity.ok(roadmapService.countUserRoadmaps(userId));
+    public ResponseEntity<Long> countUserRoadmaps(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(roadmapService.countUserRoadmaps(userDetails.getUsername()));
     }
 } 

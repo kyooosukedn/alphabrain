@@ -1,7 +1,9 @@
 package com.alphabrain.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -94,8 +96,8 @@ public class RoadmapServiceImpl implements RoadmapService {
         clone.setNodeIds(template.getNodeIds());
         clone.setStructure(template.getStructure());
         clone.setUserId(userId);
-        clone.setIsPublic(false);
-        clone.setIsTemplate(false);
+        clone.setPublic(false);
+        clone.setTemplate(false);
         clone.setTags(template.getTags());
         clone.setDifficultyLevel(template.getDifficultyLevel());
         clone.setEstimatedTimeToComplete(template.getEstimatedTimeToComplete());
@@ -108,6 +110,63 @@ public class RoadmapServiceImpl implements RoadmapService {
         return roadmapRepository.countByUserId(userId);
     }
     
+    @Override
+    public List<Roadmap> getRoadmapsByUserId(String userId) {
+        return roadmapRepository.findByUserId(userId);
+    }
+
+    @Override
+    public Optional<Roadmap> getRoadmapById(String id) {
+        return roadmapRepository.findById(id);
+    }
+
+    @Override
+    public List<Roadmap> searchRoadmapsByTitle(String title) {
+        return roadmapRepository.searchPublicRoadmaps(title);
+    }
+
+    @Override
+    public List<Roadmap> findRoadmapsByTag(String tag) {
+        return roadmapRepository.findByTagsInAndIsPublicTrue(List.of(tag));
+    }
+
+    @Override
+    public Roadmap addNodeToRoadmap(String roadmapId, String nodeId) {
+        Roadmap roadmap = getRoadmap(roadmapId);
+        List<String> nodeIds = roadmap.getNodeIds();
+        if (nodeIds == null) {
+            nodeIds = new ArrayList<>();
+        }
+        if (nodeIds.contains(nodeId)) {
+            throw new IllegalArgumentException("Node already in roadmap: " + nodeId);
+        }
+        nodeIds.add(nodeId);
+        roadmap.setNodeIds(nodeIds);
+        roadmap.setUpdatedAt(LocalDateTime.now());
+        return roadmapRepository.save(roadmap);
+    }
+
+    @Override
+    public Roadmap removeNodeFromRoadmap(String roadmapId, String nodeId) {
+        Roadmap roadmap = getRoadmap(roadmapId);
+        List<String> nodeIds = roadmap.getNodeIds();
+        if (nodeIds == null || !nodeIds.contains(nodeId)) {
+            throw new IllegalArgumentException("Node not in roadmap: " + nodeId);
+        }
+        nodeIds.remove(nodeId);
+        roadmap.setNodeIds(nodeIds);
+        roadmap.setUpdatedAt(LocalDateTime.now());
+        return roadmapRepository.save(roadmap);
+    }
+
+    @Override
+    public Roadmap updateRoadmapStructure(String roadmapId, Roadmap.RoadmapStructure structure) {
+        Roadmap roadmap = getRoadmap(roadmapId);
+        roadmap.setStructure(structure);
+        roadmap.setUpdatedAt(LocalDateTime.now());
+        return roadmapRepository.save(roadmap);
+    }
+
     @Override
     public boolean canUserAccessRoadmap(String userId, String roadmapId) {
         return roadmapRepository.findByIdAndIsPublicOrUserId(roadmapId, userId).isPresent();

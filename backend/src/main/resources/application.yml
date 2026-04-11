@@ -2,32 +2,17 @@ spring:
   profiles:
     active: dev
   main:
-    allow-bean-definition-overriding: true
+    allow-bean-definition-overriding: false
   data:
     mongodb:
       host: localhost
       port: 27017
       database: alphabrain
       auto-index-creation: true
-  mongodb:
-    embedded:
-      version: 4.0.2
   security:
     user:
       name: user
       password: password
-  datasource:
-    url: jdbc:postgresql://localhost:5432/alphabrain
-    username: postgres
-    password: admin
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
 
 server:
   port: 8081

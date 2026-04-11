@@ -38,7 +38,7 @@ public class RoadmapServiceTest {
         testRoadmap.setDescription("Test Description");
         testRoadmap.setCategory("programming");
         testRoadmap.setUserId("test-user");
-        testRoadmap.setIsPublic(true);
+        testRoadmap.setPublic(true);
         testRoadmap.setCreatedAt(LocalDateTime.now());
         testRoadmap.setUpdatedAt(LocalDateTime.now());
     }
@@ -103,7 +103,7 @@ public class RoadmapServiceTest {
     
     @Test
     void cloneTemplate_ShouldCreateNewRoadmap() {
-        testRoadmap.setIsTemplate(true);
+        testRoadmap.setTemplate(true);
         when(roadmapRepository.findById("template-id")).thenReturn(Optional.of(testRoadmap));
         when(roadmapRepository.save(any(Roadmap.class))).thenAnswer(i -> i.getArgument(0));
         
@@ -118,7 +118,7 @@ public class RoadmapServiceTest {
     
     @Test
     void cloneTemplate_ShouldThrowException_WhenNotTemplate() {
-        testRoadmap.setIsTemplate(false);
+        testRoadmap.setTemplate(false);
         when(roadmapRepository.findById("template-id")).thenReturn(Optional.of(testRoadmap));
         
         assertThrows(RuntimeException.class,
