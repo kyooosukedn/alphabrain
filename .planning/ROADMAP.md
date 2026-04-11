@@ -54,11 +54,24 @@ Gemini API integration, personalized learning paths, cached hybrid approach.
 
 ---
 
-### Phase 8: Social & Discovery (Planned)
+### Phase 8: Social & Discovery ✅
 
 **Goal:** Public roadmap discovery, user profiles, roadmap ratings/reviews. Users can browse and clone community roadmaps.
 
-**Status:** Not started
+**What it delivers:**
+- Backend: RoadmapRating model + RoadmapRatingService (1-5 star + text reviews, upsert, denormalized averages)
+- Backend: Social fields on Roadmap (averageRating, ratingCount, cloneCount, authorUsername)
+- Backend: User profile fields (displayName, bio, avatarUrl, publicProfile)
+- Backend: ProfileController — GET/PUT /api/profile/me, GET /api/profile/user/{username}, user's public roadmaps
+- Backend: Rating endpoints — POST /{id}/rate, GET /{id}/ratings, GET /{id}/ratings/summary, mine
+- Backend: Discovery endpoints — /discover/popular, /discover/recent, /discover/most-cloned
+- Backend: Clone-with-tracking — POST /{id}/clone increments cloneCount
+- Frontend: RoadmapList — Popular/Recent/Most Cloned tabs, author & rating badges on cards
+- Frontend: RoadmapDetail — star rating widget, reviews list, clone button, author link
+- Frontend: UserProfilePage — public profile with avatar, bio, public roadmaps grid
+- Route: /profile/:username
+
+**Status:** Complete
 
 ---
 

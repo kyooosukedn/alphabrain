@@ -14,8 +14,34 @@ export interface Roadmap {
   tags: string[];
   difficultyLevel: string;
   estimatedTimeToComplete: number;
+  averageRating?: number;
+  ratingCount?: number;
+  cloneCount?: number;
+  authorUsername?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RoadmapRating {
+  id: string;
+  roadmapId: string;
+  userId: string;
+  username: string;
+  rating: number;
+  review?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProfile {
+  username: string;
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  publicProfile: boolean;
+  email?: string;
+  createdAt?: string;
+  publicRoadmapCount?: number;
 }
 
 export interface RoadmapItem {

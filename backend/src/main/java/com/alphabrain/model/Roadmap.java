@@ -61,7 +61,13 @@ public class Roadmap {
     
     // Estimated total time to complete in minutes
     private int estimatedTimeToComplete;
-    
+
+    // Social / discovery fields
+    private double averageRating;
+    private int ratingCount;
+    private int cloneCount;
+    private String authorUsername;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     

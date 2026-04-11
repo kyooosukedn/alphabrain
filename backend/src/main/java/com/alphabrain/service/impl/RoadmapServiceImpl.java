@@ -106,6 +106,29 @@ public class RoadmapServiceImpl implements RoadmapService {
     }
     
     @Override
+    public Roadmap cloneRoadmap(String roadmapId, String userId) {
+        Roadmap original = getRoadmap(roadmapId);
+
+        Roadmap clone = new Roadmap();
+        clone.setTitle(original.getTitle() + " - Copy");
+        clone.setDescription(original.getDescription());
+        clone.setCategory(original.getCategory());
+        clone.setThumbnailUrl(original.getThumbnailUrl());
+        clone.setItems(original.getItems());
+        clone.setNodeIds(original.getNodeIds());
+        clone.setStructure(original.getStructure());
+        clone.setUserId(userId);
+        clone.setPublic(false);
+        clone.setTemplate(false);
+        clone.setTags(original.getTags());
+        clone.setDifficultyLevel(original.getDifficultyLevel());
+        clone.setEstimatedTimeToComplete(original.getEstimatedTimeToComplete());
+        clone.setAuthorUsername(userId);
+
+        return createRoadmap(clone);
+    }
+
+    @Override
     public long countUserRoadmaps(String userId) {
         return roadmapRepository.countByUserId(userId);
     }

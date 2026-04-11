@@ -1,5 +1,5 @@
 import axios from '../config/axiosConfig';
-import { Roadmap } from '../types/Roadmap';
+import { Roadmap, RoadmapRating, UserProfile } from '../types/Roadmap';
 
 export class RoadmapService {
   private static readonly BASE_URL = '/api/roadmaps';
@@ -69,6 +69,78 @@ export class RoadmapService {
   
   static async countUserRoadmaps(): Promise<number> {
     const response = await axios.get(`${this.BASE_URL}/user/count`);
+    return response.data;
+  }
+
+  // ─── Rating & Reviews ───
+
+  static async rateRoadmap(id: string, rating: number, review?: string): Promise<RoadmapRating> {
+    const response = await axios.post(`${this.BASE_URL}/${id}/rate`, { rating, review });
+    return response.data;
+  }
+
+  static async getRoadmapRatings(id: string): Promise<RoadmapRating[]> {
+    const response = await axios.get(`${this.BASE_URL}/${id}/ratings`);
+    return response.data;
+  }
+
+  static async getRatingSummary(id: string): Promise<{ averageRating: number; ratingCount: number }> {
+    const response = await axios.get(`${this.BASE_URL}/${id}/ratings/summary`);
+    return response.data;
+  }
+
+  static async getMyRating(id: string): Promise<RoadmapRating | null> {
+    const response = await axios.get(`${this.BASE_URL}/${id}/ratings/mine`);
+    return response.status === 204 ? null : response.data;
+  }
+
+  static async deleteMyRating(id: string): Promise<void> {
+    await axios.delete(`${this.BASE_URL}/${id}/ratings/mine`);
+  }
+
+  // ─── Discovery ───
+
+  static async getPopularRoadmaps(): Promise<Roadmap[]> {
+    const response = await axios.get(`${this.BASE_URL}/discover/popular`);
+    return response.data;
+  }
+
+  static async getRecentRoadmaps(): Promise<Roadmap[]> {
+    const response = await axios.get(`${this.BASE_URL}/discover/recent`);
+    return response.data;
+  }
+
+  static async getMostClonedRoadmaps(): Promise<Roadmap[]> {
+    const response = await axios.get(`${this.BASE_URL}/discover/most-cloned`);
+    return response.data;
+  }
+
+  // ─── Clone ───
+
+  static async cloneRoadmap(id: string): Promise<Roadmap> {
+    const response = await axios.post(`${this.BASE_URL}/${id}/clone`);
+    return response.data;
+  }
+
+  // ─── Profile ───
+
+  static async getMyProfile(): Promise<UserProfile> {
+    const response = await axios.get('/api/profile/me');
+    return response.data;
+  }
+
+  static async updateMyProfile(data: Partial<UserProfile>): Promise<UserProfile> {
+    const response = await axios.put('/api/profile/me', data);
+    return response.data;
+  }
+
+  static async getUserProfile(username: string): Promise<UserProfile> {
+    const response = await axios.get(`/api/profile/user/${username}`);
+    return response.data;
+  }
+
+  static async getUserPublicRoadmaps(username: string): Promise<Roadmap[]> {
+    const response = await axios.get(`/api/profile/user/${username}/roadmaps`);
     return response.data;
   }
 } 

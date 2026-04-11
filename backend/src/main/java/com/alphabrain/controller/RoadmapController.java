@@ -1,6 +1,7 @@
 package com.alphabrain.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alphabrain.model.KnowledgeNode;
 import com.alphabrain.model.Roadmap;
+import com.alphabrain.model.RoadmapRating;
 import com.alphabrain.service.KnowledgeNodeService;
+import com.alphabrain.service.RoadmapRatingService;
 import com.alphabrain.service.RoadmapService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,9 +35,12 @@ import lombok.RequiredArgsConstructor;
 public class RoadmapController {
     
     private final RoadmapService roadmapService;
-    
+
     @Autowired
     private KnowledgeNodeService knowledgeNodeService;
+
+    @Autowired
+    private RoadmapRatingService ratingService;
     
     /**
      * Create a new roadmap
@@ -44,9 +50,10 @@ public class RoadmapController {
             @RequestBody Roadmap roadmap,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        // Set the user ID from the authenticated user
+        // Set the user ID and author from the authenticated user
         roadmap.setUserId(userDetails.getUsername());
-        
+        roadmap.setAuthorUsername(userDetails.getUsername());
+
         Roadmap createdRoadmap = roadmapService.createRoadmap(roadmap);
         return new ResponseEntity<>(createdRoadmap, HttpStatus.CREATED);
     }
@@ -316,5 +323,104 @@ public class RoadmapController {
     @GetMapping("/user/count")
     public ResponseEntity<Long> countUserRoadmaps(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(roadmapService.countUserRoadmaps(userDetails.getUsername()));
+    }
+
+    // ─── Rating & Review Endpoints ───
+
+    @PostMapping("/{id}/rate")
+    public ResponseEntity<?> rateRoadmap(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            int rating = ((Number) body.get("rating")).intValue();
+            String review = (String) body.getOrDefault("review", null);
+            RoadmapRating result = ratingService.rateRoadmap(
+                    id, userDetails.getUsername(), userDetails.getUsername(), rating, review);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}/ratings")
+    public ResponseEntity<List<RoadmapRating>> getRoadmapRatings(@PathVariable String id) {
+        return ResponseEntity.ok(ratingService.getRatingsForRoadmap(id));
+    }
+
+    @GetMapping("/{id}/ratings/summary")
+    public ResponseEntity<Map<String, Object>> getRatingSummary(@PathVariable String id) {
+        return ResponseEntity.ok(ratingService.getRoadmapRatingSummary(id));
+    }
+
+    @GetMapping("/{id}/ratings/mine")
+    public ResponseEntity<?> getMyRating(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ratingService.getUserRating(id, userDetails.getUsername())
+                .map(r -> ResponseEntity.ok((Object) r))
+                .orElse(ResponseEntity.noContent().build());
+    }
+
+    @DeleteMapping("/{id}/ratings/mine")
+    public ResponseEntity<Void> deleteMyRating(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        ratingService.deleteRating(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
+    // ─── Discovery Endpoints ───
+
+    @GetMapping("/discover/popular")
+    public ResponseEntity<List<Roadmap>> getPopularRoadmaps() {
+        List<Roadmap> roadmaps = roadmapService.getAllPublicRoadmaps();
+        roadmaps.sort((a, b) -> Double.compare(b.getAverageRating(), a.getAverageRating()));
+        return ResponseEntity.ok(roadmaps.stream().limit(20).toList());
+    }
+
+    @GetMapping("/discover/recent")
+    public ResponseEntity<List<Roadmap>> getRecentRoadmaps() {
+        List<Roadmap> roadmaps = roadmapService.getAllPublicRoadmaps();
+        roadmaps.sort((a, b) -> {
+            if (b.getCreatedAt() == null || a.getCreatedAt() == null) return 0;
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
+        return ResponseEntity.ok(roadmaps.stream().limit(20).toList());
+    }
+
+    @GetMapping("/discover/most-cloned")
+    public ResponseEntity<List<Roadmap>> getMostClonedRoadmaps() {
+        List<Roadmap> roadmaps = roadmapService.getAllPublicRoadmaps();
+        roadmaps.sort((a, b) -> Integer.compare(b.getCloneCount(), a.getCloneCount()));
+        return ResponseEntity.ok(roadmaps.stream().limit(20).toList());
+    }
+
+    // ─── Clone with tracking ───
+
+    @PostMapping("/{id}/clone")
+    public ResponseEntity<?> clonePublicRoadmap(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Optional<Roadmap> roadmapOpt = roadmapService.getRoadmapById(id);
+            if (roadmapOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+            Roadmap original = roadmapOpt.get();
+            if (!original.isPublic() && !original.isTemplate()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Roadmap is not public"));
+            }
+
+            // Increment clone count on original
+            original.setCloneCount(original.getCloneCount() + 1);
+            roadmapService.updateRoadmap(original.getId(), original);
+
+            // Clone it
+            Roadmap clone = roadmapService.cloneRoadmap(id, userDetails.getUsername());
+            return ResponseEntity.ok(clone);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 } 

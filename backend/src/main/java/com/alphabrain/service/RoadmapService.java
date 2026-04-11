@@ -35,8 +35,9 @@ public interface RoadmapService {
     Roadmap removeNodeFromRoadmap(String roadmapId, String nodeId);
     Roadmap updateRoadmapStructure(String roadmapId, Roadmap.RoadmapStructure structure);
 
-    // Template operations
+    // Template / clone operations
     Roadmap cloneTemplate(String templateId, String userId);
+    Roadmap cloneRoadmap(String roadmapId, String userId);
 
     // Statistics
     long countUserRoadmaps(String userId);

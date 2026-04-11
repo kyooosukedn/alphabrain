@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -11,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Copy, Star, User } from 'lucide-react';
 import { RoadmapService } from '../services/RoadmapService';
 import { Roadmap } from '../types/Roadmap';
 
@@ -20,10 +22,11 @@ const RoadmapList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
+  const [sortTab, setSortTab] = useState('popular');
 
   useEffect(() => {
     loadRoadmaps();
-  }, [category, difficulty]);
+  }, [category, difficulty, sortTab]);
 
   const loadRoadmaps = async () => {
     try {
@@ -32,6 +35,12 @@ const RoadmapList: React.FC = () => {
         result = await RoadmapService.getRoadmapsByCategory(category);
       } else if (difficulty !== 'all') {
         result = await RoadmapService.getRoadmapsByDifficulty(difficulty);
+      } else if (sortTab === 'popular') {
+        result = await RoadmapService.getPopularRoadmaps();
+      } else if (sortTab === 'recent') {
+        result = await RoadmapService.getRecentRoadmaps();
+      } else if (sortTab === 'most-cloned') {
+        result = await RoadmapService.getMostClonedRoadmaps();
       } else {
         result = await RoadmapService.getPublicRoadmaps();
       }
@@ -81,7 +90,16 @@ const RoadmapList: React.FC = () => {
     <div className="max-w-6xl mx-auto py-6">
       {/* Header + Filters */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-4">Learning Roadmaps</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-white">Discover Roadmaps</h1>
+          <Tabs value={sortTab} onValueChange={setSortTab}>
+            <TabsList>
+              <TabsTrigger value="popular">Popular</TabsTrigger>
+              <TabsTrigger value="recent">Recent</TabsTrigger>
+              <TabsTrigger value="most-cloned">Most Cloned</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Input
@@ -139,14 +157,32 @@ const RoadmapList: React.FC = () => {
               <p className="text-sm text-slate-400 line-clamp-3">
                 {roadmap.description}
               </p>
-              <div className="flex gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 <Badge className={difficultyColor(roadmap.difficultyLevel)}>
                   {roadmap.difficultyLevel}
                 </Badge>
                 <Badge variant="outline" className="text-slate-400 border-slate-700">
                   {roadmap.estimatedTimeToComplete} mins
                 </Badge>
+                {(roadmap.ratingCount ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-yellow-400 border-yellow-500/30 flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-yellow-400" />
+                    {roadmap.averageRating?.toFixed(1)}
+                  </Badge>
+                )}
+                {(roadmap.cloneCount ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-slate-400 border-slate-700 flex items-center gap-1">
+                    <Copy className="w-3 h-3" />
+                    {roadmap.cloneCount}
+                  </Badge>
+                )}
               </div>
+              {roadmap.authorUsername && (
+                <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {roadmap.authorUsername}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}

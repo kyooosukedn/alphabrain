@@ -39,6 +39,12 @@ public class User implements UserDetails {
     @Indexed(unique = true)
     private String email;
 
+    // Profile fields
+    private String displayName;
+    private String bio;
+    private String avatarUrl;
+    private boolean publicProfile;
+
     private Set<String> roles = new HashSet<>();
     
     private boolean enabled = true;

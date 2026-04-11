@@ -9,24 +9,58 @@ import {
   CheckCircle2,
   Circle,
   Clock,
+  Copy,
   ExternalLink,
   Loader2,
+  Star,
+  User,
 } from 'lucide-react';
 import { RoadmapService } from '../services/RoadmapService';
 import { UserProgressService } from '../services/UserProgressService';
-import { Roadmap, RoadmapItem } from '../types/Roadmap';
+import { Roadmap, RoadmapItem, RoadmapRating } from '../types/Roadmap';
 import { UserProgress, ItemProgress } from '../types/UserProgress';
+import { useToast } from '@/hooks/use-toast';
+
+function StarRating({ value, onChange, readonly = false }: {
+  value: number;
+  onChange?: (v: number) => void;
+  readonly?: boolean;
+}) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          disabled={readonly}
+          onClick={() => onChange?.(star)}
+          className={`${readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'} transition-transform`}
+        >
+          <Star
+            className={`h-5 w-5 ${star <= value ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const RoadmapDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ratings, setRatings] = useState<RoadmapRating[]>([]);
+  const [myRating, setMyRating] = useState<number>(0);
+  const [myReview, setMyReview] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [cloning, setCloning] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadRoadmapAndProgress();
+      loadRatings();
     }
   }, [id]);
 
@@ -42,6 +76,52 @@ const RoadmapDetail: React.FC = () => {
       console.error('Error loading roadmap:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRatings = async () => {
+    try {
+      const [ratingsData, myRatingData] = await Promise.all([
+        RoadmapService.getRoadmapRatings(id!),
+        RoadmapService.getMyRating(id!),
+      ]);
+      setRatings(ratingsData);
+      if (myRatingData) {
+        setMyRating(myRatingData.rating);
+        setMyReview(myRatingData.review || '');
+      }
+    } catch {
+      // ratings are optional
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (myRating === 0) return;
+    setSubmittingRating(true);
+    try {
+      await RoadmapService.rateRoadmap(id!, myRating, myReview || undefined);
+      toast({ title: 'Rating submitted!' });
+      loadRatings();
+      // Refresh roadmap to get updated averageRating
+      const updated = await RoadmapService.getRoadmap(id!);
+      setRoadmap(updated);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.response?.data?.error || 'Failed to submit rating', variant: 'destructive' });
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
+  const handleClone = async () => {
+    setCloning(true);
+    try {
+      const cloned = await RoadmapService.cloneRoadmap(id!);
+      toast({ title: 'Roadmap cloned!', description: `"${cloned.title}" added to your roadmaps.` });
+      navigate(`/roadmap/${cloned.id}`);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err?.response?.data?.error || 'Failed to clone', variant: 'destructive' });
+    } finally {
+      setCloning(false);
     }
   };
 
@@ -122,7 +202,7 @@ const RoadmapDetail: React.FC = () => {
       {/* Description + Metadata */}
       <div className="mb-6">
         <p className="text-slate-300 mb-3">{roadmap.description}</p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <Badge variant="outline" className="text-violet-400 border-violet-500/30">
             {roadmap.category}
           </Badge>
@@ -133,7 +213,48 @@ const RoadmapDetail: React.FC = () => {
             <Clock className="w-3 h-3" />
             {roadmap.estimatedTimeToComplete} mins
           </Badge>
+          {roadmap.authorUsername && (
+            <Badge
+              variant="outline"
+              className="text-slate-300 border-slate-700 flex items-center gap-1 cursor-pointer hover:border-violet-500/50"
+              onClick={() => navigate(`/profile/${roadmap.authorUsername}`)}
+            >
+              <User className="w-3 h-3" />
+              {roadmap.authorUsername}
+            </Badge>
+          )}
+          {(roadmap.ratingCount ?? 0) > 0 && (
+            <Badge variant="outline" className="text-yellow-400 border-yellow-500/30 flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-400" />
+              {roadmap.averageRating?.toFixed(1)} ({roadmap.ratingCount})
+            </Badge>
+          )}
+          {(roadmap.cloneCount ?? 0) > 0 && (
+            <Badge variant="outline" className="text-slate-400 border-slate-700 flex items-center gap-1">
+              <Copy className="w-3 h-3" />
+              {roadmap.cloneCount} clones
+            </Badge>
+          )}
         </div>
+
+        {/* Clone button for public roadmaps */}
+        {roadmap.isPublic && (
+          <div className="mt-4">
+            <Button
+              onClick={handleClone}
+              disabled={cloning}
+              variant="outline"
+              className="border-violet-500/30 text-violet-300 hover:bg-violet-500/20"
+            >
+              {cloning ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Copy className="h-4 w-4 mr-2" />
+              )}
+              Clone to My Roadmaps
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Progress Card */}
@@ -214,6 +335,70 @@ const RoadmapDetail: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      {/* Ratings & Reviews */}
+      {roadmap.isPublic && (
+        <Card className="bg-slate-900 border-slate-800 mt-6">
+          <CardContent className="p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-400" />
+              Ratings & Reviews
+            </h2>
+
+            {/* Submit rating */}
+            <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
+              <p className="text-sm text-slate-300">Rate this roadmap</p>
+              <StarRating value={myRating} onChange={setMyRating} />
+              <textarea
+                placeholder="Write a review (optional)..."
+                value={myReview}
+                onChange={(e) => setMyReview(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                rows={2}
+              />
+              <Button
+                size="sm"
+                onClick={handleSubmitRating}
+                disabled={myRating === 0 || submittingRating}
+                className="bg-violet-600 hover:bg-violet-700"
+              >
+                {submittingRating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                {myRating > 0 ? 'Submit Rating' : 'Select a rating'}
+              </Button>
+            </div>
+
+            {/* Reviews list */}
+            {ratings.length > 0 ? (
+              <div className="space-y-3">
+                {ratings.map((r) => (
+                  <div key={r.id} className="border-t border-slate-800 pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-sm font-medium text-slate-300 cursor-pointer hover:text-violet-400"
+                          onClick={() => navigate(`/profile/${r.username}`)}
+                        >
+                          {r.username}
+                        </span>
+                        <StarRating value={r.rating} readonly />
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {r.review && (
+                      <p className="text-sm text-slate-400 mt-1">{r.review}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No reviews yet. Be the first!</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
