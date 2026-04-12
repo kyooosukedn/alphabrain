@@ -27,17 +27,23 @@ export interface Progress {
 
 export interface LoginCredentials {
   username: string;
+  email: string;
   password: string;
 }
 
 export interface RegisterCredentials {
   username: string;
+  name: string;
   email: string;
   password: string;
+  confirmPassword: string;
 }
 
 export interface AuthResponse {
   token: string;
+  access_token?: string;
+  userId?: string;
+  username?: string;
   message?: string;
 }
 

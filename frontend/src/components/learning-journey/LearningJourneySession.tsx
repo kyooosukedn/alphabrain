@@ -78,21 +78,22 @@ export function LearningJourneySessions({
         : { ...formData, id: `temp-${Date.now()}` };
       
       // Convert the event data to match the API's expected format
-      const sessionData = {
-        title: eventWithId.title,
-        description: eventWithId.description || '',
-        startTime: (eventWithId.start || eventWithId.startTime).toISOString(),
-        endTime: (eventWithId.end || eventWithId.endTime).toISOString(),
+      const evt = eventWithId as any;
+      const sessionData: any = {
+        title: evt.title,
+        description: evt.description || '',
+        startTime: (evt.start || evt.startTime).toISOString(),
+        endTime: (evt.end || evt.endTime).toISOString(),
         status: 'PLANNED',
-        type: eventWithId.type || 'LECTURE',
-        priority: eventWithId.priority || 'MEDIUM',
-        category: eventWithId.category || 'STUDY',
-        topicId: eventWithId.topicId || null
+        type: evt.type || 'LECTURE',
+        priority: evt.priority || 'MEDIUM',
+        category: evt.category || 'STUDY',
+        topicId: evt.topicId || null
       };
-      
+
       // Create or update the session with the API
-      if ('id' in formData && formData.id && !formData.id.startsWith('temp-')) {
-        await sessionsApi.updateSession(formData.id, sessionData);
+      if ('id' in formData && (formData as any).id && !(formData as any).id.startsWith('temp-')) {
+        await sessionsApi.updateSession((formData as any).id, sessionData);
       } else {
         await sessionsApi.createSession(sessionData);
       }

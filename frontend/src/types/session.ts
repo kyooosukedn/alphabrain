@@ -1,7 +1,7 @@
 // src/types/session.ts - Update the existing interfaces
 
 // Define SessionStatus enum type to match backend
-export type SessionStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'MISSED';
+export type SessionStatus = 'PLANNED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'MISSED';
 
 export interface Session {
   id: string;

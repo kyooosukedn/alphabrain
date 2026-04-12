@@ -159,7 +159,10 @@ export const authApi = {
 // Progress API endpoints
 export const progressApi = {
   getUserProgress: () => axiosInstance.get('/api/progress'),
+  getProgress: () => axiosInstance.get('/api/progress'),
   updateProgress: (progressData: Partial<Progress>) =>
+    axiosInstance.post('/api/progress', progressData),
+  addProgress: (progressData: Omit<Progress, 'id'>) =>
     axiosInstance.post('/api/progress', progressData),
   getProgressStats: () => axiosInstance.get('/api/progress/stats')
 };

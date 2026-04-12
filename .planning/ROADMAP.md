@@ -75,8 +75,19 @@ Gemini API integration, personalized learning paths, cached hybrid approach.
 
 ---
 
-### Phase 9: Deployment & Production (Planned)
+### Phase 9: Deployment & Production ✅
 
 **Goal:** Dockerize frontend + backend, deploy to cloud (Railway/Fly.io), production env vars, CI/CD pipeline.
 
-**Status:** Not started
+**What it delivers:**
+- Backend: Multi-stage Dockerfile (Maven build → JRE 21 Alpine, 243MB, non-root user)
+- Backend: application-prod.properties with all secrets via env vars
+- Frontend: Multi-stage Dockerfile (Node build → nginx Alpine, 55MB)
+- Frontend: nginx.conf with SPA fallback, /api/ reverse proxy, gzip, cache headers, security headers
+- Root docker-compose.yml: MongoDB + backend + frontend, healthchecks, env var injection
+- .env.example documenting all required variables
+- .dockerignore files for both services
+- GitHub Actions CI/CD: backend test (Maven + MongoDB service), frontend type-check + build, Docker image build on main
+- Fixed pre-existing TS build errors (unused vars, missing type fields, test file exclusion)
+
+**Status:** Complete

@@ -20,15 +20,15 @@ export const login = createAsyncThunk<User, LoginCredentials>(
       if (response.data && response.data.access_token) {
         const authResponse = response.data as AuthResponse;
         // Store the JWT token
-        localStorage.setItem('token', authResponse.access_token);
-        
+        localStorage.setItem('token', authResponse.access_token!);
+
         // Extract user data from token or from response
         const userData: User = {
           id: authResponse.userId || 'unknown',
           username: authResponse.username || credentials.username,
-          email: credentials.username, // Use username as email if not provided
+          email: credentials.email || credentials.username,
         };
-        
+
         return userData;
       } else {
         return rejectWithValue('Invalid response format from server');
@@ -49,12 +49,12 @@ export const register = createAsyncThunk<User, RegisterCredentials>(
   async (credentials: RegisterCredentials, { rejectWithValue }) => {
     try {
       const response = await authApi.register(credentials);
-      
+
       // Handle response format from our backend API
       if (response.data && response.data.access_token) {
         const authResponse = response.data as AuthResponse;
         // Store the JWT token
-        localStorage.setItem('token', authResponse.access_token);
+        localStorage.setItem('token', authResponse.access_token!);
         
         // Extract user data from token or from response
         const userData: User = {

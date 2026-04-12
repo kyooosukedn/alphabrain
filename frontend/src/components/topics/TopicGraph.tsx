@@ -20,6 +20,8 @@ interface GraphNode {
   sessions?: number;
   progress?: number;
   topicId?: string;
+  x?: number;
+  y?: number;
 }
 
 interface GraphLink {
@@ -118,7 +120,7 @@ export function TopicGraph() {
     
     // Focus on the node
     if (graphRef.current) {
-      graphRef.current.centerAt(node.x, node.y, 1000);
+      graphRef.current.centerAt(node.x ?? 0, node.y ?? 0, 1000);
       graphRef.current.zoom(2, 1000);
     }
   };

@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const KnowledgeGraphPage: React.FC = () => {
   const [nodes, setNodes] = useState<KnowledgeNode[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<ConnectionSuggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
