@@ -6,9 +6,9 @@ import { Calendar, Clock, BookOpen, Edit, Trash2, Play, CheckCircle, X, AlertTri
 import { Session, SessionStatus } from '@/types/session';
 import { sessionsApi } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 import { SessionFormModal } from './SessionFormModal';
 import { SessionFormData } from '@/types/schedule';
+import { safeFormat, safeDuration } from '@/utils/dateUtils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,30 +28,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EventType, eventTypeColors } from '@/types/schedule';
-
-// Safe date formatting helper
-const safeFormat = (dateStr: string | undefined | null, formatStr: string): string => {
-  if (!dateStr) return 'Invalid date';
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return 'Invalid date';
-    return format(date, formatStr);
-  } catch {
-    return 'Invalid date';
-  }
-};
-
-const safeDuration = (startTime: string | undefined | null, endTime: string | undefined | null): string => {
-  if (!startTime || !endTime) return '0 min';
-  try {
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return '0 min';
-    return `${Math.round((end.getTime() - start.getTime()) / (1000 * 60))} min`;
-  } catch {
-    return '0 min';
-  }
-};
 import { StudyEvent } from '@/types/schedule';
 
 interface SessionListProps {
