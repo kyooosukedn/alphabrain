@@ -5,6 +5,7 @@ import { ArrowLeft, LayoutGrid, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SessionList } from './schedule/SessionList';
 import { ScheduleStats } from './schedule/ScheduleStats';
+import { CalendarView } from './schedule/CalendarView';
 
 export default function Schedule() {
   const [activeView, setActiveView] = useState<'calendar' | 'list'>('list');
@@ -54,11 +55,7 @@ export default function Schedule() {
         </TabsContent>
         
         <TabsContent value="calendar" className="mt-4">
-          <div className="text-center py-10 border rounded-md border-dashed">
-            <CalendarIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium">Calendar View Coming Soon</h3>
-            <p className="text-muted-foreground">We're working on a beautiful calendar view for your sessions.</p>
-          </div>
+          <CalendarView />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,0 +1,115 @@
+/* Calendar View Styles */
+
+.calendar-view {
+  background: transparent;
+}
+
+.calendar-view .fc {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+.calendar-view .fc-theme-standard td,
+.calendar-view .fc-theme-standard th {
+  border-color: hsl(var(--border));
+}
+
+.calendar-view .fc-col-header-cell {
+  padding: 0.5rem;
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+.calendar-view .fc-daygrid-day {
+  transition: background-color 0.2s;
+}
+
+.calendar-view .fc-daygrid-day:hover {
+  background-color: hsl(var(--accent) / 0.05);
+}
+
+.calendar-view .fc-day-today {
+  background-color: hsl(var(--accent) / 0.1) !important;
+}
+
+.calendar-view .fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  border: none;
+}
+
+.calendar-view .fc-event:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+  transition: all 0.2s;
+}
+
+.calendar-view .fc-event-main {
+  padding: 2px;
+}
+
+.calendar-view .fc-toolbar-title {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.calendar-view .fc-button {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.calendar-view .fc-button-primary {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.calendar-view .fc-button-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.calendar-view .fc-button-active {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.calendar-view .fc-popover {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-view .fc-popover-title {
+  background-color: hsl(var(--popover));
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.calendar-view .fc-timegrid-slot {
+  height: 3rem;
+}
+
+.calendar-view .fc-timegrid-slot-label {
+  font-size: 0.75rem;
+}
+
+.calendar-view .fc-list-event:hover td {
+  background-color: hsl(var(--accent) / 0.05);
+}
+
+.calendar-view .fc-list-event-time {
+  color: hsl(var(--primary));
+  font-weight: 500;
+}
+
+/* More popover */
+.calendar-view .fc-more-popover {
+  max-height: 300px;
+  overflow-y: auto;
+}
