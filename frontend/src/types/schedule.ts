@@ -23,11 +23,11 @@ export interface ScheduleStat {
 }
 
 export const eventTypeColors: Record<EventType, string> = {
-  'Deep Work': '#8b5cf6',
-  'Customer Interview': '#3b82f6',
-  'Book Review': '#10b981',
-  'TD Monthly Newsletter': '#f59e0b',
-  'Record Video': '#ec4899'
+  'Deep Work': '#F97316',      // Coral (primary)
+  'Customer Interview': '#059669',  // Green (success)
+  'Book Review': '#0284C7',    // Sky (info)
+  'TD Monthly Newsletter': '#D97706',  // Amber (warning)
+  'Record Video': '#7C3AED'    // Violet (creative - sparing use)
 };
 
 export interface SessionFormData {
