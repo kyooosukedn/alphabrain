@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +15,10 @@ import {
   CheckCircle2,
   Loader,
   AlertCircle,
-  Plus
+  Plus,
+  Sparkles,
+  Flame,
+  TrendingUp
 } from "lucide-react";
 import { MetricCard } from "./dashboard/MetricCard";
 import { StudySessionCard } from "./dashboard/StudySessionCard";
@@ -33,6 +36,14 @@ export default function Dashboard() {
   const [showAlert, setShowAlert] = useState(true);
   const [selectedTab, setSelectedTab] = useState("current");
   const [viewPreference, setViewPreference] = useState<'calendar' | 'list'>('list');
+
+  // Personalized greeting based on time of day
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  }, []);
 
   // Fetch topics
   const { data: topicsData } = useQuery({
@@ -151,46 +162,51 @@ export default function Dashboard() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       {/* Welcome Alert */}
       {showAlert && studyStreak > 0 && (
-        <Alert className="bg-primary/5 border-primary/20 animate-fadeIn">
+        <Alert className="bg-orange-500/5 border-orange-500/20 animate-fadeIn">
           <AlertDescription className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
+              <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <Flame className="h-5 w-5 text-orange-500" />
               </div>
-              <div className="space-y-1">
-                <p className="font-medium">{studyStreak} day streak!</p>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-orange-700 dark:text-orange-300">{studyStreak} day streak! Keep the fire burning.</p>
                 <p className="text-sm text-muted-foreground">
-                  Keep it up — consistency is everything.
+                  {studyStreak >= 7 ? "You're on a roll! 🎉" : "Consistency is everything."}
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowAlert(false)} className="hover:bg-primary/10">
+            <Button variant="ghost" size="sm" onClick={() => setShowAlert(false)} className="hover:bg-orange-500/10">
               Dismiss
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-primary to-primary/50 bg-clip-text text-transparent">
-              Welcome back!
-            </span>
+      {/* Hero Section - Command Center */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20 p-6 rounded-xl border border-orange-100 dark:border-orange-900/30">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-orange-500" />
+            <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Your Learning Command Center</p>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            {greeting}! Ready to learn?
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Ready to continue your learning journey?
+          <p className="text-muted-foreground max-w-lg">
+            {studySessions.length > 0
+              ? `You have ${filteredSessions.length} session${filteredSessions.length !== 1 ? 's' : ''} in progress. ${dueReviewCount > 0 ? `${dueReviewCount} review${dueReviewCount !== 1 ? 's' : ''} waiting.` : ''}`
+              : "Start your learning journey by creating your first study session."
+            }
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => setViewPreference('list')}>
-            <BookOpen className={`h-5 w-5 ${viewPreference === 'list' ? 'text-primary' : 'text-muted-foreground'}`} />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="icon" onClick={() => setViewPreference('list')} className={viewPreference === 'list' ? 'bg-orange-50 border-orange-200' : ''}>
+            <BookOpen className={`h-5 w-5 ${viewPreference === 'list' ? 'text-orange-600' : 'text-muted-foreground'}`} />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => setViewPreference('calendar')}>
-            <Calendar className={`h-5 w-5 ${viewPreference === 'calendar' ? 'text-primary' : 'text-muted-foreground'}`} />
+          <Button variant="outline" size="icon" onClick={() => setViewPreference('calendar')} className={viewPreference === 'calendar' ? 'bg-orange-50 border-orange-200' : ''}>
+            <Calendar className={`h-5 w-5 ${viewPreference === 'calendar' ? 'text-orange-600' : 'text-muted-foreground'}`} />
           </Button>
-          <Button onClick={handleStartStudying}>
+          <Button onClick={handleStartStudying} className="bg-orange-500 hover:bg-orange-600">
             Start Studying <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -234,24 +250,24 @@ export default function Dashboard() {
 
       {/* Due Reviews Banner */}
       {dueReviewCount > 0 && (
-        <Card className="bg-violet-500/10 border-violet-500/30 cursor-pointer hover:bg-violet-500/15 transition-colors"
+        <Card className="bg-orange-500/10 border-orange-500/30 cursor-pointer hover:bg-orange-500/15 transition-colors"
               onClick={() => navigate('/reviews')}>
           <CardContent className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-violet-500/20 flex items-center justify-center">
-                <Brain className="h-5 w-5 text-violet-400" />
+              <div className="h-10 w-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                <Brain className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-medium text-violet-300">
-                  {dueReviewCount} card{dueReviewCount !== 1 ? 's' : ''} due for review
+                <p className="font-medium text-orange-700 dark:text-orange-300">
+                  {dueReviewCount} item{dueReviewCount !== 1 ? 's' : ''} ready for review
                 </p>
-                <p className="text-sm text-slate-500">
-                  Spaced repetition keeps knowledge fresh
+                <p className="text-sm text-muted-foreground">
+                  Spaced repetition strengthens memory
                 </p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="border-violet-500/30 text-violet-300 hover:bg-violet-500/20">
-              Start Review <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20">
+              Review Now <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -286,18 +302,31 @@ export default function Dashboard() {
                   </Button>
                 </div>
               ) : filteredSessions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Plus className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="h-20 w-20 rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-950/40 dark:to-orange-950/20 flex items-center justify-center mb-6 border-2 border-orange-200 dark:border-orange-900/30">
+                    {selectedTab === 'current' ? (
+                      <TrendingUp className="h-10 w-10 text-orange-500" />
+                    ) : selectedTab === 'upcoming' ? (
+                      <Calendar className="h-10 w-10 text-orange-500" />
+                    ) : (
+                      <Trophy className="h-10 w-10 text-orange-500" />
+                    )}
                   </div>
-                  <p className="text-lg font-medium mb-2">No {selectedTab} sessions</p>
-                  <p className="text-muted-foreground text-center mb-4">
-                    {selectedTab === 'current' ? 'Start a session to track progress.' :
-                     selectedTab === 'upcoming' ? 'Plan your next study session.' :
-                     'Complete a session to see it here.'}
+                  <h3 className="text-xl font-semibold mb-2">
+                    {selectedTab === 'current' ? 'No active sessions yet' :
+                     selectedTab === 'upcoming' ? 'No upcoming sessions planned' :
+                     'No completed sessions yet'}
+                  </h3>
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
+                    {selectedTab === 'current'
+                      ? 'Start a learning session to track your progress. Every minute counts toward your goals!'
+                      : selectedTab === 'upcoming'
+                      ? 'Planning ahead helps you stay consistent. Schedule your next deep work session.'
+                      : 'Complete your first session to see your achievements here. You\'ve got this!'}
                   </p>
-                  <Button onClick={() => navigate('/schedule')}>
-                    Create New Session
+                  <Button onClick={() => navigate('/schedule')} className="bg-orange-500 hover:bg-orange-600">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {selectedTab === 'upcoming' ? 'Schedule Session' : 'Start Learning'}
                   </Button>
                 </div>
               ) : (
@@ -336,10 +365,13 @@ export default function Dashboard() {
                 );
               })
             ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No sessions yet</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Create sessions to see progress by category.
+              <div className="text-center py-8">
+                <div className="inline-flex h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-950/40 items-center justify-center mb-3">
+                  <Target className="h-6 w-6 text-orange-500" />
+                </div>
+                <p className="text-sm font-medium mb-1">Start tracking to see progress</p>
+                <p className="text-xs text-muted-foreground">
+                  Complete sessions to track your growth across topics.
                 </p>
               </div>
             )}
