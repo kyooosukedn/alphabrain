@@ -7,8 +7,9 @@ import { Session, SessionStatus } from '@/types/session';
 import { sessionsApi } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { SessionFormModal, SessionFormData } from './SessionFormModal';
-import { 
+import { SessionFormModal } from './SessionFormModal';
+import { SessionFormData } from '@/types/schedule';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,6 +28,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EventType, eventTypeColors } from '@/types/schedule';
+
+// Safe date formatting helper
+const safeFormat = (dateStr: string | undefined | null, formatStr: string): string => {
+  if (!dateStr) return 'Invalid date';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    return format(date, formatStr);
+  } catch {
+    return 'Invalid date';
+  }
+};
+
+const safeDuration = (startTime: string | undefined | null, endTime: string | undefined | null): string => {
+  if (!startTime || !endTime) return '0 min';
+  try {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return '0 min';
+    return `${Math.round((end.getTime() - start.getTime()) / (1000 * 60))} min`;
+  } catch {
+    return '0 min';
+  }
+};
 import { StudyEvent } from '@/types/schedule';
 
 interface SessionListProps {
@@ -91,7 +116,7 @@ export function SessionList({ isModalOpen: externalModalOpen, setIsModalOpen: se
         description = formData.description || '';
         startTime = formData.start;
         endTime = formData.end;
-        type = formData.type || 'Deep Work';
+        type = (formData.type || 'Deep Work') as EventType;
         priority = formData.priority || 'MEDIUM';
         topicId = formData.topicId || '';
       } else {
@@ -205,7 +230,7 @@ export function SessionList({ isModalOpen: externalModalOpen, setIsModalOpen: se
   // Handle edit button click
   const handleEditClick = (session: Session) => {
     setEditingSession(session);
-    setSelectedDate(new Date(session.startTime));
+    setSelectedDate(session.startTime ? new Date(session.startTime) : new Date());
     setShowModal(true);
   };
 
@@ -267,15 +292,20 @@ export function SessionList({ isModalOpen: externalModalOpen, setIsModalOpen: se
       )}
       
       {!loading && !error && sessions.length === 0 && (
-        <div className="text-center py-8">
-          <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium mb-2">No Study Sessions Yet</h3>
-          <p className="text-gray-500 mb-4">Create your first study session to start tracking your learning progress.</p>
+        <div className="text-center py-16 px-4">
+          <div className="inline-flex h-20 w-20 rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-950/40 dark:to-orange-950/20 items-center justify-center mb-6 border-2 border-orange-200 dark:border-orange-900/30">
+            <BookOpen className="h-10 w-10 text-orange-500" />
+          </div>
+          <h3 className="text-2xl font-semibold mb-3">Your learning journey starts here</h3>
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+            Create your first study session to start tracking your progress. Every session is a step toward mastery.
+          </p>
           <Button onClick={() => {
             setEditingSession(undefined);
             setSelectedDate(new Date());
             setShowModal(true);
-          }}>
+          }} className="bg-orange-500 hover:bg-orange-600">
+            <Calendar className="mr-2 h-4 w-4" />
             Create Your First Session
           </Button>
         </div>
@@ -301,7 +331,7 @@ export function SessionList({ isModalOpen: externalModalOpen, setIsModalOpen: se
                 </Badge>
               </div>
               <CardDescription>
-                {format(new Date(session.startTime), 'MMM d, yyyy')} • {format(new Date(session.startTime), 'h:mm a')} - {format(new Date(session.endTime), 'h:mm a')}
+                {safeFormat(session.startTime, 'MMM d, yyyy')} • {safeFormat(session.startTime, 'h:mm a')} - {safeFormat(session.endTime, 'h:mm a')}
               </CardDescription>
             </CardHeader>
             
@@ -313,7 +343,7 @@ export function SessionList({ isModalOpen: externalModalOpen, setIsModalOpen: se
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="outline" className="flex items-center gap-1 bg-gray-50">
                   <Clock className="h-3 w-3" />
-                  {Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / (1000 * 60))} min
+                  {safeDuration(session.startTime, session.endTime)}
                 </Badge>
                 
                 <Badge variant="outline" className="flex items-center gap-1 bg-gray-50">
