@@ -1,6 +1,7 @@
 // This component interacts with a third-party library (react-force-graph) that has complex typing
-import React, { useEffect, useState, useRef } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
+// Lazy load ForceGraph2D to avoid issues with optional 3D dependencies
+const ForceGraph2D = React.lazy(() => import('react-force-graph').then(m => ({ default: m.ForceGraph2D })));
 import { useAppSelector } from '../store';
 import NodeDetailsView from './NodeDetailsView';
 import { Dialog, DialogContent } from './ui/dialog';
@@ -127,63 +128,72 @@ const KnowledgeGraph: React.FC = () => {
       </div>
       
       <div className="h-[600px] border border-slate-800 rounded-md relative bg-slate-950">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <ForceGraph2D
-          ref={graphRef}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          graphData={graphData as any}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          nodeLabel={(node: any) => `${node.title} (${node.type})`}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          nodeColor={(node: any) => node.color || '#999'}
-          nodeRelSize={6}
-          linkDirectionalArrowLength={6}
-          linkDirectionalArrowRelPos={1}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onNodeClick={handleNodeClick as any}
-          onBackgroundClick={handleBackgroundClick}
-          cooldownTicks={100}
-          linkWidth={1}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-            const label = node.title;
-            const fontSize = 12/globalScale;
-            ctx.font = `${fontSize}px Sans-Serif`;
-            const textWidth = ctx.measureText(label).width;
-            const bgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
+        <Suspense fallback={
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent mb-4"></div>
+              <p className="text-slate-400">Loading knowledge graph...</p>
+            </div>
+          </div>
+        }>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ForceGraph2D
+            ref={graphRef}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            graphData={graphData as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            nodeLabel={(node: any) => `${node.title} (${node.type})`}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            nodeColor={(node: any) => node.color || '#F97316'}
+            nodeRelSize={6}
+            linkDirectionalArrowLength={6}
+            linkDirectionalArrowRelPos={1}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onNodeClick={handleNodeClick as any}
+            onBackgroundClick={handleBackgroundClick}
+            cooldownTicks={100}
+            linkWidth={1}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+              const label = node.title;
+              const fontSize = 12/globalScale;
+              ctx.font = `${fontSize}px Sans-Serif`;
+              const textWidth = ctx.measureText(label).width;
+              const bgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
 
-            ctx.fillStyle = node.color || '#999';
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
-            ctx.fill();
-
-            // Progress indicator (arc around the node)
-            if (node.progress !== undefined) {
-              const progress = node.progress / 100;
+              ctx.fillStyle = node.color || '#F97316';
               ctx.beginPath();
-              ctx.arc(node.x, node.y, 7, 0, 2 * Math.PI * progress, false);
-              ctx.lineWidth = 2;
-              ctx.strokeStyle = '#4CAF50';
-              ctx.stroke();
-            }
+              ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+              ctx.fill();
 
-            // Only render text labels if zoomed in enough
-            if (globalScale >= 1.2) {
-              ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-              ctx.fillRect(
-                node.x - textWidth / 2 - fontSize * 0.1,
-                node.y + 8,
-                bgDimensions[0],
-                bgDimensions[1]
-              );
+              // Progress indicator (arc around the node)
+              if (node.progress !== undefined) {
+                const progress = node.progress / 100;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 7, 0, 2 * Math.PI * progress, false);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#059669';
+                ctx.stroke();
+              }
 
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillStyle = '#e2e8f0';
-              ctx.fillText(label, node.x, node.y + 8 + fontSize / 2);
-            }
-          }}
-        />
+              // Only render text labels if zoomed in enough
+              if (globalScale >= 1.2) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.fillRect(
+                  node.x - textWidth / 2 - fontSize * 0.1,
+                  node.y + 8,
+                  bgDimensions[0],
+                  bgDimensions[1]
+                );
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillText(label, node.x, node.y + 8 + fontSize / 2);
+              }
+            }}
+          />
+        </Suspense>
         
         {/* Controls overlay */}
         <div className="absolute bottom-4 right-4 bg-slate-800 p-2 rounded-md shadow-md border border-slate-700">
@@ -218,7 +228,7 @@ const KnowledgeGraph: React.FC = () => {
             </div>
             <div className="mt-4">
               <button
-                className="text-sm px-3 py-1 bg-violet-500 text-white rounded-md hover:bg-violet-600"
+                className="text-sm px-3 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600"
                 onClick={openDetailView}
               >
                 Explore Topic
