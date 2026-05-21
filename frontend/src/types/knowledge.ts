@@ -19,7 +19,7 @@ export interface KnowledgeNode {
   masteryLevel?: number;
   completed?: boolean;
   prerequisites?: string[];
-  nextNodes?: string[];
+  leadsTo?: string[];
   resources?: Resource[];
   completedAt?: string;
 }

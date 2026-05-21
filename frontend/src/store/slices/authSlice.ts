@@ -17,16 +17,16 @@ export const login = createAsyncThunk<User, LoginCredentials>(
       const response = await authApi.login(credentials);
       
       // Handle response format from our backend API
-      if (response.data && response.data.access_token) {
+      if (response.data && response.data.token) {
         const authResponse = response.data as AuthResponse;
         // Store the JWT token
-        localStorage.setItem('token', authResponse.access_token!);
+        localStorage.setItem('token', authResponse.token);
 
         // Extract user data from token or from response
         const userData: User = {
           id: authResponse.userId || 'unknown',
           username: authResponse.username || credentials.username,
-          email: credentials.email || credentials.username,
+          email: credentials.username,
         };
 
         return userData;
@@ -51,18 +51,18 @@ export const register = createAsyncThunk<User, RegisterCredentials>(
       const response = await authApi.register(credentials);
 
       // Handle response format from our backend API
-      if (response.data && response.data.access_token) {
+      if (response.data && response.data.token) {
         const authResponse = response.data as AuthResponse;
         // Store the JWT token
-        localStorage.setItem('token', authResponse.access_token!);
-        
+        localStorage.setItem('token', authResponse.token);
+
         // Extract user data from token or from response
         const userData: User = {
           id: authResponse.userId || 'unknown',
           username: authResponse.username || credentials.username,
           email: credentials.email,
         };
-        
+
         return userData;
       } else {
         return rejectWithValue('Invalid response format from server');

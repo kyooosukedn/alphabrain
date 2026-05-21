@@ -31,8 +31,8 @@ function toGraphData(nodes: KnowledgeNode[]): GraphData {
         links.push({ source: preReqId, target: node.id!, type: 'PREREQUISITE_OF' });
       }
     }
-    if (node.nextNodes) {
-      for (const nextId of node.nextNodes) {
+    if (node.leadsTo) {
+      for (const nextId of node.leadsTo) {
         links.push({ source: node.id!, target: nextId, type: 'LEADS_TO' });
       }
     }

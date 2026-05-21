@@ -1,7 +1,7 @@
-// This component interacts with a third-party library (react-force-graph) that has complex typing
+// This component interacts with a third-party library (react-force-graph-2d) that has complex typing
 import React, { useEffect, useState, useRef, Suspense } from 'react';
-// Lazy load ForceGraph2D to avoid issues with optional 3D dependencies
-const ForceGraph2D = React.lazy(() => import('react-force-graph').then(m => ({ default: m.ForceGraph2D })));
+// Lazy load ForceGraph2D from the 2D-only package (no AFRAME/THREE dependencies)
+const ForceGraph2D = React.lazy(() => import('react-force-graph-2d'));
 import { useAppSelector } from '../store';
 import NodeDetailsView from './NodeDetailsView';
 import { Dialog, DialogContent } from './ui/dialog';

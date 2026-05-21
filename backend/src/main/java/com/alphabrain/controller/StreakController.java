@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alphabrain.dto.streak.RecordActivityRequest;
 import com.alphabrain.dto.streak.UserStreakResponse;
-import com.alphabrain.model.User;
 import com.alphabrain.model.UserStreak;
 import com.alphabrain.service.StreakService;
 
@@ -31,8 +30,8 @@ public class StreakController {
     
     @GetMapping("/my-streak")
     public ResponseEntity<UserStreakResponse> getMyStreak(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        UserStreak streak = streakService.getUserStreak(user.getId());
+        String username = authentication.getName();
+        UserStreak streak = streakService.getUserStreak(username);
         return ResponseEntity.ok(UserStreakResponse.fromUserStreak(streak));
     }
     
@@ -40,27 +39,27 @@ public class StreakController {
     public ResponseEntity<UserStreakResponse> recordActivity(
             @Valid @RequestBody RecordActivityRequest request,
             Authentication authentication) {
-        
-        User user = (User) authentication.getPrincipal();
+
+        String username = authentication.getName();
         UserStreak updatedStreak = streakService.recordLearningActivity(
-                user.getId(), 
-                request.getStudyTimeMinutes(), 
+                username,
+                request.getStudyTimeMinutes(),
                 request.getActivityDate());
-        
+
         return ResponseEntity.ok(UserStreakResponse.fromUserStreak(updatedStreak));
     }
     
     @PostMapping("/record-node-completion")
     public ResponseEntity<UserStreakResponse> recordNodeCompletion(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        UserStreak updatedStreak = streakService.recordNodeCompletion(user.getId());
+        String username = authentication.getName();
+        UserStreak updatedStreak = streakService.recordNodeCompletion(username);
         return ResponseEntity.ok(UserStreakResponse.fromUserStreak(updatedStreak));
     }
-    
-    @PostMapping("/record-roadmap-completion") 
+
+    @PostMapping("/record-roadmap-completion")
     public ResponseEntity<UserStreakResponse> recordRoadmapCompletion(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        UserStreak updatedStreak = streakService.recordRoadmapCompletion(user.getId());
+        String username = authentication.getName();
+        UserStreak updatedStreak = streakService.recordRoadmapCompletion(username);
         return ResponseEntity.ok(UserStreakResponse.fromUserStreak(updatedStreak));
     }
     
@@ -88,13 +87,13 @@ public class StreakController {
     public ResponseEntity<UserStreakResponse> addStreakFreeze(
             @PathVariable int days,
             Authentication authentication) {
-        
+
         if (days <= 0 || days > 7) {
             return ResponseEntity.badRequest().build();
         }
-        
-        User user = (User) authentication.getPrincipal();
-        UserStreak updatedStreak = streakService.addStreakFreezeDays(user.getId(), days);
+
+        String username = authentication.getName();
+        UserStreak updatedStreak = streakService.addStreakFreezeDays(username, days);
         return ResponseEntity.ok(UserStreakResponse.fromUserStreak(updatedStreak));
     }
 } 

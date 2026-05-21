@@ -7,16 +7,6 @@ export interface User {
   updatedAt?: string;
 }
 
-export interface Session {
-  id: string;
-  title: string;
-  description?: string;
-  startTime: Date;
-  endTime: Date;
-  status: 'scheduled' | 'completed' | 'cancelled';
-  userId: string;
-}
-
 export interface Progress {
   id: string;
   metric: string;
@@ -27,7 +17,6 @@ export interface Progress {
 
 export interface LoginCredentials {
   username: string;
-  email: string;
   password: string;
 }
 
@@ -41,10 +30,10 @@ export interface RegisterCredentials {
 
 export interface AuthResponse {
   token: string;
-  access_token?: string;
   userId?: string;
   username?: string;
   message?: string;
+  success?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -68,8 +57,8 @@ export interface AuthState {
 }
 
 export interface SessionsState {
-  sessions: Session[];
-  currentSession: Session | null;
+  sessions: import('./session').Session[];
+  currentSession: import('./session').Session | null;
   loading: boolean;
   error: string | null;
 }

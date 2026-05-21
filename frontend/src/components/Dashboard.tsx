@@ -18,7 +18,10 @@ import {
   Plus,
   Sparkles,
   Flame,
-  TrendingUp
+  TrendingUp,
+  Download,
+  X,
+  WifiOff
 } from "lucide-react";
 import { MetricCard } from "./dashboard/MetricCard";
 import { StudySessionCard } from "./dashboard/StudySessionCard";
@@ -28,12 +31,17 @@ import { sessionsApi, topicsApi, streakApi, reviewApi } from '@/services/api';
 import { Session } from '@/types/session';
 import { sessionToStudySession } from '@/utils/mappers';
 import { useToast } from '@/hooks/use-toast';
+import { usePWA } from '@/hooks/usePWA';
+import { Onboarding, useOnboarding } from '@/components/onboarding/Onboarding';
 import { Brain } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isInstallable, isOnline, promptInstall } = usePWA();
+  const { showOnboarding, handleComplete: handleOnboardingComplete } = useOnboarding();
   const [showAlert, setShowAlert] = useState(true);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(true);
   const [selectedTab, setSelectedTab] = useState("current");
   const [viewPreference, setViewPreference] = useState<'calendar' | 'list'>('list');
 
@@ -160,6 +168,45 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* PWA Install Prompt */}
+      {showInstallPrompt && isInstallable && (
+        <Alert className="bg-blue-500/5 border-blue-500/20">
+          <AlertDescription className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <Download className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-blue-700 dark:text-blue-300">Install AlphaBrain</p>
+                <p className="text-sm text-muted-foreground">
+                  Get the full experience with offline access and push notifications
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={promptInstall} className="bg-blue-500 hover:bg-blue-600">
+                Install
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowInstallPrompt(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Offline Alert */}
+      {!isOnline && (
+        <Alert className="bg-yellow-500/5 border-yellow-500/20">
+          <AlertDescription className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <WifiOff className="h-5 w-5 text-yellow-500" />
+              <p className="font-semibold text-yellow-700 dark:text-yellow-300">You're offline</p>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Welcome Alert */}
       {showAlert && studyStreak > 0 && (
         <Alert className="bg-orange-500/5 border-orange-500/20 animate-fadeIn">
@@ -378,6 +425,11 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Onboarding Overlay */}
+      {showOnboarding && (
+        <Onboarding onComplete={handleOnboardingComplete} onSkip={handleOnboardingComplete} />
+      )}
     </div>
   );
 }

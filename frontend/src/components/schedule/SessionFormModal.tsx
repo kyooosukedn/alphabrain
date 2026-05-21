@@ -26,7 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { StudyEvent, EventType, eventTypeColors } from "@/types/schedule";
+import { StudyEvent, SessionFormData, EventType, eventTypeColors } from "@/types/schedule";
 import { Session, SessionStatus } from "@/types/session";
 import { TopicSelector } from "../topics/TopicsSelector";
 import { sessionsApi } from "@/services/api";
@@ -60,17 +60,6 @@ interface SessionFormModalProps {
   onSubmit: (event: StudyEvent | SessionFormData) => void;
   selectedDate: Date | null;
   editingSession?: Session; // Optional session being edited
-}
-
-// Interface that matches what SessionList expects
-export interface SessionFormData {
-  title: string;
-  description: string;
-  start: Date;
-  end: Date;
-  type: EventType;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  topicId?: string;
 }
 
 export function SessionFormModal({

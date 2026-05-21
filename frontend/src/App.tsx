@@ -21,6 +21,9 @@ const Schedule = React.lazy(() => import('./components/Schedule'));
 const ProgressPage = React.lazy(() => import('./components/progress/ProgressPage'));
 const ReviewPage = React.lazy(() => import('./pages/ReviewPage'));
 const UserProfilePage = React.lazy(() => import('./pages/UserProfilePage'));
+const AchievementsPage = React.lazy(() => import('./pages/AchievementsPage'));
+const QuestsPage = React.lazy(() => import('./pages/QuestsPage'));
+const NotesPage = React.lazy(() => import('./pages/NotesPage'));
 
 function PageLoader() {
   return (
@@ -72,6 +75,9 @@ const App: React.FC = () => {
                       <Route path="/roadmaps" element={<RoadmapList />} />
                       <Route path="/roadmap/:id" element={<RoadmapDetail />} />
                       <Route path="/profile/:username" element={<UserProfilePage />} />
+                      <Route path="/achievements" element={<AchievementsPage />} />
+                      <Route path="/quests" element={<QuestsPage />} />
+                      <Route path="/notes" element={<NotesPage />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>

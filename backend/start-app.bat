@@ -1,0 +1,9 @@
+@echo off
+echo Starting MongoDB container...
+docker-compose up -d
+
+echo Waiting for MongoDB to start...
+timeout /t 5
+
+echo Building and running the application...
+call mvnw.cmd spring-boot:run 

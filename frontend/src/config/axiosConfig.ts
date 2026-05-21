@@ -18,7 +18,7 @@ if (isDev && devMode.useMockToken && !localStorage.getItem('token')) {
 }
 
 // Get base URL from environment with fallback
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
 
 // Log the API URL for debugging
 console.log("API URL configured as:", API_URL);

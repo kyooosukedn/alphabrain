@@ -7,7 +7,7 @@ import {
 	deleteSession,
 	setCurrentSession,
 } from '../store/slices/sessionsSlice';
-import type { Session } from '../types/session';
+import type { Session, SessionStatus } from '../types/session';
 import { sessionsApi } from '../services/api';
 
 export const useSessions = () => {
@@ -70,7 +70,7 @@ export const useSessions = () => {
 	);
 	
 	const handleUpdateSessionStatus = useCallback(
-		async (sessionId: string, status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED') => {
+		async (sessionId: string, status: SessionStatus) => {
 			try {
 				// First update the status in the backend
 				await sessionsApi.updateSessionStatus(sessionId, status);

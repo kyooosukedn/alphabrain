@@ -26,8 +26,9 @@ export const validatePassword = (password: string): string | undefined => {
 export const validateLoginForm = (values: LoginCredentials) => {
   const errors: Partial<Record<keyof LoginCredentials, string>> = {};
 
-  const emailError = validateEmail(values.email);
-  if (emailError) errors.email = emailError;
+  if (!values.username) {
+    errors.username = 'Username is required';
+  }
 
   const passwordError = validatePassword(values.password);
   if (passwordError) errors.password = passwordError;

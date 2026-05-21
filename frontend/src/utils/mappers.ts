@@ -89,7 +89,7 @@ export const sessionToStudySession = (session: Session): StudySession => {
 		timeLeft,
 		dueDate: new Date(session.endTime).toLocaleDateString(),
 		difficulty: difficulty as "easy" | "medium" | "hard",
-		topics: topics.filter(t => t.trim() !== "").map(t => t.trim()),
+		topics: topics.filter(t => t && t.trim() !== "").map(t => t!.trim()),
 		color,
 		streakDays: 1, // Default value, can be updated with actual data when available
 		completedTopics: Math.floor(progress / 10), // Estimate based on progress
